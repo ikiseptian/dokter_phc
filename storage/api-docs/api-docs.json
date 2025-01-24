@@ -1,0 +1,765 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Item Test API",
+        "description": "API untuk mengelola data dokter phc",
+        "version": "1.0"
+    },
+    "paths": {
+        "/api/itemtest": {
+            "get": {
+                "summary": "Get all Item Tests",
+                "operationId": "40c8af15f508d56a05797a33d267f350",
+                "responses": {
+                    "200": {
+                        "description": "A list of Item Tests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ItemTest"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "summary": "Create a new Item Test",
+                "operationId": "24aa2a8a1691ea73344effeee35eaa80",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ItemTest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "The created Item Test",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ItemTest"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/labtrans": {
+            "get": {
+                "tags": [
+                    "Lab Trans"
+                ],
+                "summary": "Search Lab Trans by various fields",
+                "operationId": "ffd047780c3fda111188668d60ae6998",
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "description": "Search query that will be applied to multiple fields (e.g., LabNumber, LabTest, PatientID)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A list of Lab Trans",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LabTrans"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Lab Trans"
+                ],
+                "summary": "Create a new Lab Trans",
+                "operationId": "510798dffe17c56ee3229597ad9301d3",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LabTrans"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "The created Lab Trans",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LabTrans"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/labtransdetail": {
+            "get": {
+                "tags": [
+                    "Lab Trans"
+                ],
+                "summary": "Get all Lab Trans",
+                "operationId": "e9cf1d304f246ab4293fdbcb13063518",
+                "responses": {
+                    "200": {
+                        "description": "A list of Lab Trans",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LabTransDetail"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/labtransother": {
+            "get": {
+                "tags": [
+                    "LabTransOther"
+                ],
+                "summary": "Get all LabTransOthers",
+                "operationId": "3ffe3c986d4d00d359e1c70447d5d930",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LabTransOther"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/pasien": {
+            "get": {
+                "tags": [
+                    "Pasien"
+                ],
+                "summary": "Ambil semua data pasien",
+                "description": "Mengambil daftar semua pasien yang terdaftar. Bisa menggunakan parameter pencarian.",
+                "operationId": "49dd4f9c6782abbdbf414e9da709f276",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Parameter pencarian untuk mencocokkan data pasien berdasarkan NIK, PatientID_Provider, atau kolom lain.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "John"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daftar pasien berhasil diambil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Patient"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Pasien"
+                ],
+                "summary": "Tambah data pasien baru",
+                "description": "Menambahkan pasien baru ke dalam database.",
+                "operationId": "933dddcf1a6e640f74ad4a2541f1a008",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "NIK",
+                                    "PatientID_Provider"
+                                ],
+                                "properties": {
+                                    "NIK": {
+                                        "type": "string",
+                                        "example": "1234567890123456"
+                                    },
+                                    "PatientID_Provider": {
+                                        "type": "string",
+                                        "example": "P-001"
+                                    },
+                                    "FullName": {
+                                        "type": "string",
+                                        "example": "John Doe"
+                                    },
+                                    "Sex": {
+                                        "type": "string",
+                                        "enum": [
+                                            "M",
+                                            "F"
+                                        ],
+                                        "example": "M"
+                                    },
+                                    "BirthDate": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "1990-01-01"
+                                    },
+                                    "Address": {
+                                        "type": "string",
+                                        "example": "Jl. Contoh No.1"
+                                    },
+                                    "Phone": {
+                                        "type": "string",
+                                        "example": "081234567890"
+                                    },
+                                    "CreateBy": {
+                                        "type": "string",
+                                        "example": "admin"
+                                    },
+                                    "LastModifiedBy": {
+                                        "type": "string",
+                                        "example": "admin"
+                                    },
+                                    "gcrecord": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Pasien berhasil ditambahkan",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Patient created successfully"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Patient"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    }
+                }
+            }
+        },
+        "/api/supportservice": {
+            "get": {
+                "tags": [
+                    "SupportService"
+                ],
+                "summary": "Get all Support Services",
+                "description": "Retrieve all support services, with an optional search parameter.",
+                "operationId": "0d001f6e538c1212c09ff29f9e8621c2",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search support services by code or name",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "Health"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/SupportService"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "SupportService"
+                ],
+                "summary": "Create a new Support Service",
+                "operationId": "3fe2020d7e0ff6ad1e5e1de4919f1008",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SupportService"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "SupportService created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SupportService"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Patient": {
+                "required": [
+                    "name",
+                    "age"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "age": {
+                        "type": "integer"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    }
+                },
+                "type": "object"
+            },
+            "ItemTest": {
+                "properties": {
+                    "ItemTestCode": {
+                        "type": "string",
+                        "maxLength": 10
+                    },
+                    "ItemTestName": {
+                        "type": "string",
+                        "maxLength": 30
+                    },
+                    "Group": {
+                        "type": "string",
+                        "maxLength": 30,
+                        "nullable": true
+                    },
+                    "SubGroup": {
+                        "type": "string",
+                        "maxLength": 30,
+                        "nullable": true
+                    },
+                    "Descriptions": {
+                        "type": "string",
+                        "maxLength": 250,
+                        "nullable": true
+                    },
+                    "CreateDate": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    },
+                    "CreateBy": {
+                        "type": "string",
+                        "maxLength": 20,
+                        "nullable": true
+                    },
+                    "LastModifiedDate": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    },
+                    "LastModifiedBy": {
+                        "type": "string",
+                        "maxLength": 20,
+                        "nullable": true
+                    },
+                    "gcrecord": {
+                        "type": "boolean",
+                        "example": false
+                    }
+                },
+                "type": "object"
+            },
+            "LabTrans": {
+                "properties": {
+                    "LabNumber": {
+                        "type": "string",
+                        "maxLength": 20
+                    },
+                    "LabTest": {
+                        "type": "string",
+                        "maxLength": 20
+                    },
+                    "TransDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "DoctorReferral": {
+                        "type": "string",
+                        "maxLength": 50,
+                        "nullable": true
+                    },
+                    "PatientID": {
+                        "type": "integer"
+                    },
+                    "Age": {
+                        "type": "string",
+                        "maxLength": 10,
+                        "nullable": true
+                    },
+                    "Anamnesa": {
+                        "type": "string",
+                        "maxLength": 250,
+                        "nullable": true
+                    },
+                    "BB": {
+                        "type": "string",
+                        "maxLength": 10,
+                        "nullable": true
+                    },
+                    "TB": {
+                        "type": "string",
+                        "maxLength": 10,
+                        "nullable": true
+                    },
+                    "LP": {
+                        "type": "string",
+                        "maxLength": 10,
+                        "nullable": true
+                    },
+                    "TD": {
+                        "type": "string",
+                        "maxLength": 10,
+                        "nullable": true
+                    },
+                    "BMI": {
+                        "type": "string",
+                        "maxLength": 10,
+                        "nullable": true
+                    },
+                    "FinalStatement": {
+                        "type": "string",
+                        "maxLength": 250,
+                        "nullable": true
+                    },
+                    "FinalResult": {
+                        "type": "string",
+                        "maxLength": 20,
+                        "nullable": true
+                    },
+                    "Status": {
+                        "type": "string",
+                        "maxLength": 20,
+                        "nullable": true
+                    },
+                    "CreateDate": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    },
+                    "CreateBy": {
+                        "type": "string",
+                        "maxLength": 20,
+                        "nullable": true
+                    },
+                    "LastModifiedDate": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    },
+                    "LastModifiedBy": {
+                        "type": "string",
+                        "maxLength": 20,
+                        "nullable": true
+                    },
+                    "gcrecord": {
+                        "type": "boolean",
+                        "example": false
+                    }
+                },
+                "type": "object"
+            },
+            "LabTransDetail": {
+                "required": [
+                    "LabTransID",
+                    "ItemTestID",
+                    "ResultValue",
+                    "Unit"
+                ],
+                "properties": {
+                    "LabTransID": {
+                        "description": "Lab Transaction ID",
+                        "type": "integer"
+                    },
+                    "ItemTestID": {
+                        "description": "Item Test ID",
+                        "type": "integer"
+                    },
+                    "ResultValue": {
+                        "description": "Result Value",
+                        "type": "string"
+                    },
+                    "Unit": {
+                        "description": "Unit of the result",
+                        "type": "string"
+                    },
+                    "ReferenceValue": {
+                        "description": "Reference Value",
+                        "type": "string"
+                    },
+                    "ResultNotes": {
+                        "description": "Result Notes",
+                        "type": "string"
+                    },
+                    "CreateDate": {
+                        "description": "Date when the record was created",
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    },
+                    "CreateBy": {
+                        "description": "Name of the user who created the record",
+                        "type": "string"
+                    },
+                    "LastModifiedDate": {
+                        "description": "Date when the record was last modified",
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    },
+                    "LastModifiedBy": {
+                        "description": "Name of the user who last modified the record",
+                        "type": "string"
+                    },
+                    "gcrecord": {
+                        "description": "Indicator for soft delete",
+                        "type": "boolean"
+                    },
+                    "LabNumber": {
+                        "description": "Lab number identifier",
+                        "type": "string",
+                        "maxLength": 20
+                    },
+                    "LabTest": {
+                        "description": "Test type for the lab transaction",
+                        "type": "string",
+                        "maxLength": 20
+                    },
+                    "TransDate": {
+                        "description": "Transaction date of the lab test",
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "DoctorReferral": {
+                        "description": "Doctor who referred the lab test",
+                        "type": "string",
+                        "maxLength": 50
+                    },
+                    "PatientID": {
+                        "description": "ID of the patient associated with the lab test",
+                        "type": "integer"
+                    },
+                    "Age": {
+                        "description": "Patient's age during the lab test",
+                        "type": "string",
+                        "maxLength": 10
+                    },
+                    "Anamnesa": {
+                        "description": "Patient's medical history description",
+                        "type": "string",
+                        "maxLength": 250
+                    },
+                    "BB": {
+                        "description": "Patient's body weight",
+                        "type": "string",
+                        "maxLength": 10
+                    },
+                    "TB": {
+                        "description": "Patient's height",
+                        "type": "string",
+                        "maxLength": 10
+                    },
+                    "LP": {
+                        "description": "Patient's waist circumference",
+                        "type": "string",
+                        "maxLength": 10
+                    },
+                    "TD": {
+                        "description": "Patient's blood pressure",
+                        "type": "string",
+                        "maxLength": 10
+                    },
+                    "BMI": {
+                        "description": "Patient's Body Mass Index",
+                        "type": "string",
+                        "maxLength": 10
+                    },
+                    "FinalStatement": {
+                        "description": "Doctor's final statement about the test",
+                        "type": "string",
+                        "maxLength": 250
+                    },
+                    "FinalResult": {
+                        "description": "Final result of the lab test",
+                        "type": "string",
+                        "maxLength": 20
+                    },
+                    "Status": {
+                        "description": "Status of the lab test",
+                        "type": "string",
+                        "maxLength": 20
+                    }
+                },
+                "type": "object"
+            },
+            "LabTransOther": {
+                "required": [
+                    "LabTransID",
+                    "SupportServiceID"
+                ],
+                "properties": {
+                    "ID": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "LabTransID": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "SupportServiceID": {
+                        "type": "integer",
+                        "example": 456
+                    },
+                    "SupportServiceNotes": {
+                        "type": "string",
+                        "example": "Sample notes"
+                    },
+                    "CreateDate": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    },
+                    "CreateBy": {
+                        "type": "string",
+                        "example": "admin"
+                    },
+                    "LastModifiedDate": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    },
+                    "LastModifiedBy": {
+                        "type": "string",
+                        "example": "admin"
+                    },
+                    "gcrecord": {
+                        "type": "boolean",
+                        "example": false
+                    }
+                },
+                "type": "object"
+            },
+            "SupportService": {
+                "required": [
+                    "SupportServiceCode",
+                    "SupportServiceName"
+                ],
+                "properties": {
+                    "ID": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "SupportServiceCode": {
+                        "type": "string",
+                        "example": "SS123"
+                    },
+                    "SupportServiceName": {
+                        "type": "string",
+                        "example": "Blood Test"
+                    },
+                    "CreateDate": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    },
+                    "CreateBy": {
+                        "type": "string",
+                        "example": "admin"
+                    },
+                    "LastModifiedDate": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    },
+                    "LastModifiedBy": {
+                        "type": "string",
+                        "example": "admin"
+                    },
+                    "gcrecord": {
+                        "type": "boolean",
+                        "example": false
+                    }
+                },
+                "type": "object"
+            }
+        }
+    }
+}
