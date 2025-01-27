@@ -63,7 +63,7 @@ class LabTransController extends Controller
              'patient' => $labTrans->patient ? [
                  'NIK' => $labTrans->patient->NIK ?? null,
                  'FullName' => $labTrans->patient->FullName ?? null,
-                 'PatientID_Provider' => $labTrans->patient->PatientID_Provider ?? null,
+                //  'PatientID_Provider' => $labTrans->patient->PatientID_Provider ?? null,
              ] : null,
              'Lab_Trans_Details' => $labTrans->labTransDetails->map(function ($detail) {
                  return [
