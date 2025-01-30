@@ -26,14 +26,20 @@ class LabTransDetailController extends Controller
      * )
      */
     public function index()
-    {
-        // Ambil data LabTransDetail beserta relasi labTrans dan itemTest
-        $labTransDetails = LabTransDetail::with(['labTrans', 'itemTest'])->get();
+{
+    $labTransDetails = LabTransDetail::with([
+        'labTrans' => function ($query) {
+            $query->whereNull('gcrecord'); // Hanya mengambil data tanpa gcrecord di labTrans
+        },
+        'itemTest'
+    ])
+    ->whereNull('gcrecord') // Filter gcrecord di LabTransDetail juga
+    ->get();
 
-        // Jika data tidak ditemukan
-        if ($labTransDetails->isEmpty()) {
-            return response()->json(['message' => 'Data not found'], 404);
-        }
+    // Jika data tidak ditemukan
+    if ($labTransDetails->isEmpty()) {
+        return response()->json(['message' => 'Data not found'], 404);
+    }
 
         // Format respons
         $formattedData = $labTransDetails->map(function ($detail) {

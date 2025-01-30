@@ -32,12 +32,11 @@ class PatientController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Patient::query();
-
-        // Menambahkan filter pencarian jika ada parameter 'search'
+        $query = Patient::whereNull('gcrecord')->orWhere('gcrecord', 0); // Filter gcrecord diterapkan di awal
+    
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
-
+    
             $query->where(function ($q) use ($search) {
                 $q->where('NIK', 'LIKE', "%{$search}%")
                     ->orWhere('PatientID_Provider', 'LIKE', "%{$search}%")
@@ -50,11 +49,12 @@ class PatientController extends Controller
                     ->orWhere('LastModifiedBy', 'LIKE', "%{$search}%");
             });
         }
-
+    
         $patients = $query->get();
-
+    
         return response()->json($patients, 200);
     }
+    
 
     /**
      * @OA\Post(

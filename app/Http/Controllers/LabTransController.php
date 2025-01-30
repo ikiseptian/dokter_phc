@@ -36,9 +36,10 @@ class LabTransController extends Controller
  {
      // Get the search query (if provided)
      $search = $request->query('q');
-     
-     // Query LabTrans with relations to Patient, applying search if provided
-     $labTrans = Lab_Trans::with('patient')
+
+     // Query LabTrans dengan filter gcrecord = 0
+     $labTrans = Lab_Trans::with(['patient', 'labTransDetails', 'labTransOthers'])
+         ->where('gcrecord', 0) // Filter hanya data yang belum dihapus
          ->when($search, function ($query, $search) {
              return $query->where(function ($query) use ($search) {
                  $query->where('LabNumber', 'like', '%' . $search . '%')
@@ -51,39 +52,45 @@ class LabTransController extends Controller
              });
          })
          ->get();
- 
-     // Format the response as before
-     $formattedData = $labTrans->map(function ($labTrans) {
-         return [
-             'ID' => $labTrans->ID,
-             'LabNumber' => $labTrans->LabNumber,
-             'LabTest' => $labTrans->LabTest,
-             'TransDate' => $labTrans->TransDate,
-             'PatientID' => $labTrans->PatientID,
-             'patient' => $labTrans->patient ? [
-                 'NIK' => $labTrans->patient->NIK ?? null,
-                 'FullName' => $labTrans->patient->FullName ?? null,
-                //  'PatientID_Provider' => $labTrans->patient->PatientID_Provider ?? null,
-             ] : null,
-             'Lab_Trans_Details' => $labTrans->labTransDetails->map(function ($detail) {
-                 return [
-                     'ItemTestID' => $detail->ItemTestID,
-                     'ResultValue' => $detail->ResultValue,
-                     'Unit' => $detail->Unit,
-                 ];
-             }),
-             'Lab_Trans_Others' => $labTrans->labTransOthers->map(function ($other) {
-                 return [
-                     'SupportServiceID' => $other->SupportServiceID,
-                     'SupportServiceNotes' => $other->SupportServiceNotes,
-                 ];
-             }),
-         ];
-     });
- 
-     return response()->json($formattedData, 200);
- }
- 
+
+    // Format the response
+    $formattedData = $labTrans->map(function ($labTrans) {
+        return [
+            'ID' => $labTrans->ID,
+            'LabNumber' => $labTrans->LabNumber,
+            'LabTest' => $labTrans->LabTest,
+            'TransDate' => $labTrans->TransDate,
+            'PatientID' => $labTrans->PatientID,
+            'patient' => $labTrans->patient ? [
+                [
+                    'NIK' => $labTrans->patient->NIK ?? null,
+                    'FullName' => $labTrans->patient->FullName ?? null,
+                    'PatientID_Provider' => $labTrans->patient->PatientID_Provider ?? null,
+                ]
+            ] : [],
+            'Lab_Trans_Details' => $labTrans->labTransDetails->map(function ($detail) {
+                return [
+                    'ItemTestID' => $detail->ItemTestID,
+                    'ResultValue' => $detail->ResultValue,
+                    'Unit' => $detail->Unit,
+                    'ReferenceValue' => $detail->ReferenceValue,
+                    'ResultNotes' => $detail->ResultNotes,
+                    'CreateDate' => $detail->CreateDate,
+                ];
+            }),
+            'Lab_Trans_Others' => $labTrans->labTransOthers->map(function ($other) {
+                return [
+                    'SupportServiceID' => $other->SupportServiceID,
+                    'SupportServiceNotes' => $other->SupportServiceNotes,
+                    'CreateDate' => $other->CreateDate,
+                ];
+            }),
+        ];
+    });
+
+    return response()->json($formattedData, 200);
+}
+
     /**
      * @OA\Post(
      *     path="/api/labtrans",

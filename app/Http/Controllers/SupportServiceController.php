@@ -33,21 +33,22 @@ class SupportServiceController extends Controller
      */
     public function index(Request $request)
     {
-        $query = SupportService::query();
-
+        $query = SupportService::whereNull('gcrecord')->orWhere('gcrecord', 0); 
+    
         // Tambahkan parameter pencarian
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
-
+    
             $query->where(function ($q) use ($search) {
                 $q->where('SupportServiceCode', 'LIKE', "%{$search}%")
                   ->orWhere('SupportServiceName', 'LIKE', "%{$search}%");
             });
         }
-
+    
         $supportServices = $query->get();
         return response()->json($supportServices, 200);
     }
+    
 
     /**
      * @OA\Post(

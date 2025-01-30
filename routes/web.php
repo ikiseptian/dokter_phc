@@ -20,3 +20,10 @@ use App\Http\Controllers\PatientController;
 
 // Route::get('/pasien', [PatientController::class, 'index']);
 // Route::post('/pasien', [PatientController::class, 'store']);
+Route::get('/dashboard', function () {
+    return view('dashboard/dashboard');  // Mengarahkan ke view dashboard.blade.php
+});
+
+// Route::get('/api/documentation', function () {
+//     return view('vendor.l5-swagger.index');  // Mengarahkan ke view Swagger UI
+// });

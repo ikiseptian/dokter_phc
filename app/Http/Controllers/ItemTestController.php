@@ -24,9 +24,11 @@ class ItemTestController extends Controller
      */
     public function index()
     {
-        $items = ItemTest::all();
+        // Hanya menampilkan data dengan gcrecord = 0
+        $items = ItemTest::where('gcrecord', 0)->get();
         return response()->json($items);
     }
+
 
     /**
      * @OA\Post(
@@ -61,5 +63,10 @@ class ItemTestController extends Controller
         $item = ItemTest::create($request->all());
 
         return response()->json($item, 201);
+    }
+    public function dashboard()
+    {
+        // Pastikan path view sesuai dengan lokasi file
+        return view('pasien.dashboard');
     }
 }
