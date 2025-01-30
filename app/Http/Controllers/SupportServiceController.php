@@ -81,4 +81,58 @@ class SupportServiceController extends Controller
         $supportService = SupportService::create($validated);
         return response()->json($supportService, 201);
     }
+
+    /**
+     * @OA\Put(
+     *     path="/api/supportservice/{id}",
+     *     summary="Update an existing Support Service",
+     *     tags={"SupportService"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the Support Service to update",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(ref="#/components/schemas/SupportService")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="SupportService updated",
+     *         @OA\JsonContent(ref="#/components/schemas/SupportService")
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="SupportService not found"
+     *     )
+     * )
+     */
+    public function update(Request $request, $id)
+    {
+        // Cari data SupportService berdasarkan ID
+        $supportservice = SupportService::where('ID', $id)->where('gcrecord', 0)->first();
+
+    if (!$supportservice) {
+        return response()->json(['message' => 'Item Test not found'], 404);
+    }
+
+        // Validasi request
+        $validated = $request->validate([
+            'SupportServiceCode' => 'nullable|string|max:200',
+            'SupportServiceName' => 'nullable|string|max:200',
+            'CreateDate' => 'nullable|date',
+            'CreateBy' => 'nullable|string|max:20',
+            'LastModifiedDate' => 'nullable|date',
+            'LastModifiedBy' => 'nullable|string|max:20',
+            'gcrecord' => 'nullable|boolean',
+        ]);
+
+        // Update data SupportService
+        $supportservice->update($validated);
+
+        // Kembalikan response dengan data yang sudah diupdate
+        return response()->json($supportservice, 200);
+    }
 }

@@ -10,7 +10,7 @@ class LabTransOther extends Model
     use HasFactory;
 
     protected $table = 'Lab_Trans_Other';
-
+    protected $primaryKey = 'ID';
    
     protected $fillable = [
         'LabTransID',

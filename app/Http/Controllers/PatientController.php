@@ -123,4 +123,57 @@ class PatientController extends Controller
             'data' => $patient
         ], 201);
     }
+
+    /**
+ * @OA\Put(
+ *     path="/api/pasien/{id}",
+ *     summary="Update an existing Patient",
+ *      tags={"Pasien"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the Patient to update",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(ref="#/components/schemas/Patient")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Updated Patient",
+ *         @OA\JsonContent(ref="#/components/schemas/Patient")
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Patient not found"
+ *     )
+ * )
+ */
+public function update(Request $request, $id)
+{
+    $patient = Patient::where('ID', $id)->where('gcrecord', 0)->first();
+
+    if (!$patient) {
+        return response()->json(['message' => 'Patient not found'], 404);
+    }
+    // dd($patient);
+
+    $request->validate([
+        'FullName' => 'sometimes|string|max:255',
+        'Sex' => 'sometimes|string|max:10',
+        'BirthDate' => 'nullable|date',
+        'Address' => 'nullable|string|max:255',
+        'Phone' => 'nullable|string|max:20',
+        'CreateBy' => 'nullable|string|max:50',
+        'LastModifiedBy' => 'nullable|string|max:50',
+        'gcrecord' => 'nullable|boolean',
+    ]);
+
+    $patient->update($request->all());
+
+    return response()->json($patient);
+}
+
 }

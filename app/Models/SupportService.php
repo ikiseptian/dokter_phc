@@ -10,7 +10,7 @@ class SupportService extends Model
     use HasFactory;
 
     protected $table = 'Support_Service';
-
+    protected $primaryKey = 'ID';  
     public $timestamps = false; // Nonaktifkan timestamps
 
     protected $fillable = [

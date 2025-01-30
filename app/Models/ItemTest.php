@@ -12,6 +12,7 @@ class ItemTest extends Model
     use HasFactory;
 
     protected $table = 'Item_Test'; 
+    protected $primaryKey = 'ID';  
     protected $fillable = [
         'ItemTestCode', 'ItemTestName', 'Group', 'SubGroup', 'Descriptions', 
         'CreateDate', 'CreateBy', 'LastModifiedDate', 'LastModifiedBy', 'gcrecord'

@@ -8,11 +8,25 @@
     "paths": {
         "/api/itemtest": {
             "get": {
-                "summary": "Get all Item Tests",
+                "tags": [
+                    "Item Test"
+                ],
+                "summary": "Get all Item Tests or search by query",
                 "operationId": "40c8af15f508d56a05797a33d267f350",
+                "parameters": [
+                    {
+                        "name": "query",
+                        "in": "query",
+                        "description": "Search query for all fields",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "A list of Item Tests",
+                        "description": "A list of Item Tests (filtered if query is provided)",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -27,6 +41,9 @@
                 }
             },
             "post": {
+                "tags": [
+                    "Item Test"
+                ],
                 "summary": "Create a new Item Test",
                 "operationId": "24aa2a8a1691ea73344effeee35eaa80",
                 "requestBody": {
@@ -49,6 +66,51 @@
                                 }
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/api/itemtest/{ID}": {
+            "put": {
+                "tags": [
+                    "Item Test"
+                ],
+                "summary": "Update an existing Item Test",
+                "operationId": "0689c15d32d597ce2280e4a6be1f6e6a",
+                "parameters": [
+                    {
+                        "name": "ID",
+                        "in": "path",
+                        "description": "ID of the Item Test to update",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ItemTest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated Item Test",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ItemTest"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Item Test not found"
                     }
                 }
             }
@@ -91,28 +153,516 @@
                 "tags": [
                     "Lab Trans"
                 ],
-                "summary": "Create a new Lab Trans",
+                "summary": "Create a new Lab Transaction",
                 "operationId": "510798dffe17c56ee3229597ad9301d3",
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/LabTrans"
+                                "required": [
+                                    "LabNumber",
+                                    "LabTest",
+                                    "TransDate",
+                                    "PatientID"
+                                ],
+                                "properties": {
+                                    "LabNumber": {
+                                        "type": "string",
+                                        "example": "LAB-12345"
+                                    },
+                                    "LabTest": {
+                                        "type": "string",
+                                        "example": "Blood Test"
+                                    },
+                                    "TransDate": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2024-09-06"
+                                    },
+                                    "DoctorReferral": {
+                                        "type": "string",
+                                        "example": "Dr. John Doe"
+                                    },
+                                    "PatientID": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "Age": {
+                                        "type": "string",
+                                        "example": "30"
+                                    },
+                                    "Anamnesa": {
+                                        "type": "string",
+                                        "example": "Pasien mengalami demam tinggi"
+                                    },
+                                    "BB": {
+                                        "type": "string",
+                                        "example": "70"
+                                    },
+                                    "TB": {
+                                        "type": "string",
+                                        "example": "170"
+                                    },
+                                    "LP": {
+                                        "type": "string",
+                                        "example": "80"
+                                    },
+                                    "TD": {
+                                        "type": "string",
+                                        "example": "120/80"
+                                    },
+                                    "BMI": {
+                                        "type": "string",
+                                        "example": "22.5"
+                                    },
+                                    "FinalStatement": {
+                                        "type": "string",
+                                        "example": "Sehat"
+                                    },
+                                    "FinalResult": {
+                                        "type": "string",
+                                        "example": "Normal"
+                                    },
+                                    "Status": {
+                                        "type": "string",
+                                        "example": "Completed"
+                                    },
+                                    "CreateDate": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2024-09-06"
+                                    },
+                                    "CreateBy": {
+                                        "type": "string",
+                                        "example": "admin"
+                                    },
+                                    "LastModifiedDate": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2024-09-06"
+                                    },
+                                    "LastModifiedBy": {
+                                        "type": "string",
+                                        "example": "admin"
+                                    },
+                                    "gcrecord": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "Lab_Trans_Details": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "LabTransId": {
+                                                    "type": "integer",
+                                                    "example": 201
+                                                },
+                                                "ItemTestID": {
+                                                    "type": "integer",
+                                                    "example": 101
+                                                },
+                                                "ResultValue": {
+                                                    "type": "string",
+                                                    "example": "5.4"
+                                                },
+                                                "Unit": {
+                                                    "type": "string",
+                                                    "example": "mmol/L"
+                                                },
+                                                "ReferenceValue": {
+                                                    "type": "string",
+                                                    "example": "3.9-6.1"
+                                                },
+                                                "ResultNotes": {
+                                                    "type": "string",
+                                                    "example": "Normal"
+                                                },
+                                                "CreateDate": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2024-09-06"
+                                                },
+                                                "CreateBy": {
+                                                    "type": "string",
+                                                    "example": "admin"
+                                                },
+                                                "LastModifiedDate": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2024-09-06"
+                                                },
+                                                "LastModifiedBy": {
+                                                    "type": "string",
+                                                    "example": "normal"
+                                                },
+                                                "gcrecord": {
+                                                    "type": "boolean",
+                                                    "example": "false"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "Lab_Trans_Others": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "LabTransId": {
+                                                    "type": "integer",
+                                                    "example": 201
+                                                },
+                                                "SupportServiceID": {
+                                                    "type": "integer",
+                                                    "example": 201
+                                                },
+                                                "SupportServiceNotes": {
+                                                    "type": "string",
+                                                    "example": "Rontgen dada dilakukan"
+                                                },
+                                                "CreateDate": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2024-09-06"
+                                                },
+                                                "CreateBy": {
+                                                    "type": "string",
+                                                    "example": "admin"
+                                                },
+                                                "LastModifiedDate": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2024-09-06"
+                                                },
+                                                "LastModifiedBy": {
+                                                    "type": "string",
+                                                    "example": "normal"
+                                                },
+                                                "gcrecord": {
+                                                    "type": "boolean",
+                                                    "example": "false"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
                             }
                         }
                     }
                 },
                 "responses": {
                     "201": {
-                        "description": "The created Lab Trans",
+                        "description": "Data berhasil disimpan",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/LabTrans"
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Data berhasil disimpan"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "ID": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "LabNumber": {
+                                                    "type": "string",
+                                                    "example": "LAB-12345"
+                                                },
+                                                "LabTest": {
+                                                    "type": "string",
+                                                    "example": "Blood Test"
+                                                },
+                                                "TransDate": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2024-09-06"
+                                                },
+                                                "PatientID": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    }
+                }
+            }
+        },
+        "/api/labtrans/{id}": {
+            "put": {
+                "tags": [
+                    "Lab Trans"
+                ],
+                "summary": "Update an existing Lab Transaction",
+                "operationId": "8570ef29981ac974605634dd9220e43e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the Lab Transaction",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "LabNumber",
+                                    "LabTest",
+                                    "TransDate",
+                                    "PatientID"
+                                ],
+                                "properties": {
+                                    "LabNumber": {
+                                        "type": "string",
+                                        "example": "LAB-12345"
+                                    },
+                                    "LabTest": {
+                                        "type": "string",
+                                        "example": "Blood Test"
+                                    },
+                                    "TransDate": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2024-09-06"
+                                    },
+                                    "DoctorReferral": {
+                                        "type": "string",
+                                        "example": "Dr. John Doe"
+                                    },
+                                    "PatientID": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "Age": {
+                                        "type": "string",
+                                        "example": "30"
+                                    },
+                                    "Anamnesa": {
+                                        "type": "string",
+                                        "example": "Pasien mengalami demam tinggi"
+                                    },
+                                    "BB": {
+                                        "type": "string",
+                                        "example": "70"
+                                    },
+                                    "TB": {
+                                        "type": "string",
+                                        "example": "170"
+                                    },
+                                    "LP": {
+                                        "type": "string",
+                                        "example": "80"
+                                    },
+                                    "TD": {
+                                        "type": "string",
+                                        "example": "120/80"
+                                    },
+                                    "BMI": {
+                                        "type": "string",
+                                        "example": "22.5"
+                                    },
+                                    "FinalStatement": {
+                                        "type": "string",
+                                        "example": "Sehat"
+                                    },
+                                    "FinalResult": {
+                                        "type": "string",
+                                        "example": "Normal"
+                                    },
+                                    "Status": {
+                                        "type": "string",
+                                        "example": "Completed"
+                                    },
+                                    "LastModifiedDate": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2024-09-06T12:30:00"
+                                    },
+                                    "LastModifiedBy": {
+                                        "type": "string",
+                                        "example": "admin"
+                                    },
+                                    "Lab_Trans_Details": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "LabTransId": {
+                                                    "type": "integer",
+                                                    "example": 201
+                                                },
+                                                "ItemTestID": {
+                                                    "type": "integer",
+                                                    "example": 101
+                                                },
+                                                "ResultValue": {
+                                                    "type": "string",
+                                                    "example": "5.4"
+                                                },
+                                                "Unit": {
+                                                    "type": "string",
+                                                    "example": "mmol/L"
+                                                },
+                                                "ReferenceValue": {
+                                                    "type": "string",
+                                                    "example": "3.9-6.1"
+                                                },
+                                                "ResultNotes": {
+                                                    "type": "string",
+                                                    "example": "Normal"
+                                                },
+                                                "CreateDate": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2024-09-06"
+                                                },
+                                                "CreateBy": {
+                                                    "type": "string",
+                                                    "example": "admin"
+                                                },
+                                                "LastModifiedDate": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2024-09-06"
+                                                },
+                                                "LastModifiedBy": {
+                                                    "type": "string",
+                                                    "example": "normal"
+                                                },
+                                                "gcrecord": {
+                                                    "type": "boolean",
+                                                    "example": "false"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "Lab_Trans_Others": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "LabTransId": {
+                                                    "type": "integer",
+                                                    "example": 201
+                                                },
+                                                "SupportServiceID": {
+                                                    "type": "integer",
+                                                    "example": 201
+                                                },
+                                                "SupportServiceNotes": {
+                                                    "type": "string",
+                                                    "example": "Rontgen dada dilakukan"
+                                                },
+                                                "CreateDate": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2024-09-06"
+                                                },
+                                                "CreateBy": {
+                                                    "type": "string",
+                                                    "example": "admin"
+                                                },
+                                                "LastModifiedDate": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2024-09-06"
+                                                },
+                                                "LastModifiedBy": {
+                                                    "type": "string",
+                                                    "example": "normal"
+                                                },
+                                                "gcrecord": {
+                                                    "type": "boolean",
+                                                    "example": "false"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Data berhasil diupdate",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Data berhasil diupdate"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "ID": {
+                                                    "type": "integer"
+                                                },
+                                                "LabNumber": {
+                                                    "type": "string"
+                                                },
+                                                "LabTest": {
+                                                    "type": "string"
+                                                },
+                                                "TransDate": {
+                                                    "type": "string"
+                                                },
+                                                "PatientID": {
+                                                    "type": "integer"
+                                                },
+                                                "patient": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "Lab_Trans_Details": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "Lab_Trans_Others": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Lab Transaction not found"
+                    },
+                    "400": {
+                        "description": "Bad Request"
                     }
                 }
             }
@@ -120,13 +670,24 @@
         "/api/labtransdetail": {
             "get": {
                 "tags": [
-                    "Lab Trans"
+                    "Lab Detail"
                 ],
-                "summary": "Get all Lab Trans",
+                "summary": "Get all Lab Trans with a single search parameter",
                 "operationId": "e9cf1d304f246ab4293fdbcb13063518",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search across multiple fields",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "A list of Lab Trans",
+                        "description": "Filtered list of Lab Trans",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -137,6 +698,89 @@
                                 }
                             }
                         }
+                    },
+                    "404": {
+                        "description": "Data not found"
+                    }
+                }
+            }
+        },
+        "/api/labtransdetail/{ID}": {
+            "put": {
+                "tags": [
+                    "Lab Detail"
+                ],
+                "summary": "Update a specific LabTransDetail",
+                "operationId": "66727ccbf34a96a331899ca86a6f5cfd",
+                "parameters": [
+                    {
+                        "name": "ID",
+                        "in": "path",
+                        "description": "LabTransDetail ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "ResultValue": {
+                                        "type": "string",
+                                        "example": "Positive"
+                                    },
+                                    "Unit": {
+                                        "type": "string",
+                                        "example": "mg/dL"
+                                    },
+                                    "ReferenceValue": {
+                                        "type": "string",
+                                        "example": "70-110"
+                                    },
+                                    "ResultNotes": {
+                                        "type": "string",
+                                        "example": "Normal Range"
+                                    },
+                                    "ItemTestID": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "LabTransID": {
+                                        "type": "integer",
+                                        "example": 5
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Data updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Data updated successfully"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/LabTransDetail"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Data not found"
                     }
                 }
             }
@@ -146,8 +790,19 @@
                 "tags": [
                     "LabTransOther"
                 ],
-                "summary": "Get all LabTransOthers",
+                "summary": "Get all LabTransOthers with optional search",
                 "operationId": "3ffe3c986d4d00d359e1c70447d5d930",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search across multiple fields (LabNumber, SupportServiceNotes, etc.)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -161,6 +816,82 @@
                                 }
                             }
                         }
+                    },
+                    "404": {
+                        "description": "Data not found"
+                    }
+                }
+            }
+        },
+        "/api/labtransother/{ID}": {
+            "put": {
+                "tags": [
+                    "LabTransOther"
+                ],
+                "summary": "Update a specific LabTransOther",
+                "operationId": "5184ee5aecdc03fe6ee53b1d191de5b8",
+                "parameters": [
+                    {
+                        "name": "ID",
+                        "in": "path",
+                        "description": "LabTransOther ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "SupportServiceNotes": {
+                                        "type": "string"
+                                    },
+                                    "CreateDate": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "CreateBy": {
+                                        "type": "string"
+                                    },
+                                    "LastModifiedDate": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "LastModifiedBy": {
+                                        "type": "string"
+                                    },
+                                    "LabTransID": {
+                                        "type": "integer"
+                                    },
+                                    "SupportServiceID": {
+                                        "type": "integer"
+                                    },
+                                    "gcrecord": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LabTransOther"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Data not found"
                     }
                 }
             }
@@ -295,6 +1026,51 @@
                 }
             }
         },
+        "/api/pasien/{id}": {
+            "put": {
+                "tags": [
+                    "Pasien"
+                ],
+                "summary": "Update an existing Patient",
+                "operationId": "ff1aa41bfd8f5c0034823c6acd18040b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the Patient to update",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Patient"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated Patient",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Patient"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Patient not found"
+                    }
+                }
+            }
+        },
         "/api/supportservice": {
             "get": {
                 "tags": [
@@ -360,28 +1136,104 @@
                     }
                 }
             }
+        },
+        "/api/supportservice/{id}": {
+            "put": {
+                "tags": [
+                    "SupportService"
+                ],
+                "summary": "Update an existing Support Service",
+                "operationId": "c0648888cbd9e82e16c4cdc4184f6110",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the Support Service to update",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SupportService"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "SupportService updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SupportService"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "SupportService not found"
+                    }
+                }
+            }
         }
     },
     "components": {
         "schemas": {
             "Patient": {
                 "required": [
-                    "name",
-                    "age"
+                    "NIK",
+                    "PatientID_Provider",
+                    "FullName",
+                    "Sex",
+                    "BirthDate"
                 ],
                 "properties": {
-                    "id": {
-                        "type": "integer"
-                    },
-                    "name": {
-                        "type": "string"
-                    },
-                    "age": {
-                        "type": "integer"
-                    },
-                    "email": {
+                    "NIK": {
                         "type": "string",
-                        "format": "email"
+                        "example": "1234567890123456"
+                    },
+                    "PatientID_Provider": {
+                        "type": "string",
+                        "example": "P-00123"
+                    },
+                    "FullName": {
+                        "type": "string",
+                        "example": "John Doe"
+                    },
+                    "Sex": {
+                        "type": "string",
+                        "example": "Male"
+                    },
+                    "BirthDate": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "1990-01-01"
+                    },
+                    "Address": {
+                        "type": "string",
+                        "example": "Jl. Sudirman No. 10"
+                    },
+                    "Phone": {
+                        "type": "string",
+                        "example": "08123456789"
+                    },
+                    "CreateBy": {
+                        "type": "string",
+                        "example": "admin"
+                    },
+                    "LastModifiedBy": {
+                        "type": "string",
+                        "example": "editor"
+                    },
+                    "gcrecord": {
+                        "type": "boolean",
+                        "example": false
                     }
                 },
                 "type": "object"

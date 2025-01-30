@@ -11,6 +11,7 @@ class LabTransDetail extends Model
 
     protected $table = 'Lab_Trans_Detail';  // Sesuaikan nama tabel
     public $timestamps = false; 
+    protected $primaryKey = 'ID';
     protected $fillable = [
         'LabTransID',
         'ItemTestID',
