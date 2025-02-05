@@ -19,7 +19,7 @@ class SupportServiceController extends Controller
      *         in="query",
      *         description="Search support services by code or name",
      *         required=false,
-     *         @OA\Schema(type="string", example="Health")
+     *         @OA\Schema(type="string")
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -33,31 +33,48 @@ class SupportServiceController extends Controller
      */
     public function index(Request $request)
     {
-        $query = SupportService::whereNull('gcrecord')->orWhere('gcrecord', 0); 
-    
+        $service = SupportService::whereNull('gcrecord')->orWhere('gcrecord', 0);
+
         // Tambahkan parameter pencarian
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
-    
-            $query->where(function ($q) use ($search) {
+
+            $service->where(function ($q) use ($search) {
                 $q->where('SupportServiceCode', 'LIKE', "%{$search}%")
-                  ->orWhere('SupportServiceName', 'LIKE', "%{$search}%");
+                    ->orWhere('SupportServiceName', 'LIKE', "%{$search}%");
             });
         }
-    
-        $supportServices = $query->get();
-        return response()->json($supportServices, 200);
+
+        $formattedData = $service->get()->map(function ($service) {
+            return [
+                'ID' => $service->ID,
+                'SupportServiceCode' => $service->SupportServiceCode,
+                'SupportServiceName' => $service->SupportServiceName,
+                'CreateDate' => $service->CreateDate,
+                'CreateBy' => $service->CreateBy,
+                'LastModifiedDate' => $service->LastModifiedDate,
+                'LastModifiedBy' => $service->LastModifiedBy,
+                // 'gcrecord' => $service->gcrecord,
+            ];
+        });
+
+        return response()->json($formattedData, 200);
     }
-    
+
 
     /**
      * @OA\Post(
      *     path="/api/supportservice",
-     *     summary="Create a new Support Service",
+     *     summary="Tambah data pasien baru",
+     *     description="Menambahkan pasien baru ke dalam database.",
      *     tags={"SupportService"},
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\JsonContent(ref="#/components/schemas/SupportService")
+     *         @OA\JsonContent(
+     *          @OA\Property(property="SupportServiceCode", type="string", example="SS-001"),
+     *          @OA\Property(property="SupportServiceName", type="string", example="Radiology"),
+     *          @OA\Property(property="CreateBy", type="string", example="admin"),
+     *         )
      *     ),
      *     @OA\Response(
      *         response=201,
@@ -67,72 +84,112 @@ class SupportServiceController extends Controller
      * )
      */
     public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'SupportServiceCode' => 'nullable|string|max:200',
-            'SupportServiceName' => 'nullable|string|max:200',
-            'CreateDate' => 'nullable|date',
-            'CreateBy' => 'nullable|string|max:20',
-            'LastModifiedDate' => 'nullable|date',
-            'LastModifiedBy' => 'nullable|string|max:20',
-            'gcrecord' => 'nullable|boolean',
-        ]);
+{
+    $validated = $request->validate([
+        'SupportServiceCode' => 'nullable|string|max:200|unique:Support_Service,SupportServiceCode',
+        'SupportServiceName' => 'nullable|string|max:200',
+        'CreateBy' => 'nullable|string|max:20',
+        'LastModifiedBy' => 'nullable|string|max:20',
+        'gcrecord' => 'nullable|boolean',
+    ]);
 
-        $supportService = SupportService::create($validated);
-        return response()->json($supportService, 201);
-    }
+    // Tambahkan CreateDate berdasarkan waktu sekarang
+    date_default_timezone_set('Asia/Jakarta');
 
-    /**
-     * @OA\Put(
-     *     path="/api/supportservice/{id}",
-     *     summary="Update an existing Support Service",
-     *     tags={"SupportService"},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         description="ID of the Support Service to update",
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(ref="#/components/schemas/SupportService")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="SupportService updated",
-     *         @OA\JsonContent(ref="#/components/schemas/SupportService")
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="SupportService not found"
-     *     )
-     * )
-     */
-    public function update(Request $request, $id)
-    {
-        // Cari data SupportService berdasarkan ID
-        $supportservice = SupportService::where('ID', $id)->where('gcrecord', 0)->first();
+    $validated['CreateDate'] = now()->format('Y-m-d H:i:s');
+
+    $supportService = SupportService::create($validated);
+
+    // Kembalikan response dengan body yang lengkap
+    return response()->json([
+        'message' => 'Support service record created successfully',
+        'data' => [
+            'ID' => $supportService->ID,
+            'SupportServiceCode' => $supportService->SupportServiceCode,
+            'SupportServiceName' => $supportService->SupportServiceName,
+            'CreateBy' => $supportService->CreateBy,
+            // 'LastModifiedBy' => $supportService->LastModifiedBy,
+            'CreateDate' => $supportService->CreateDate,
+            // 'gcrecord' => $supportService->gcrecord,
+        ]
+    ], 201);
+}
+
+
+
+
+   /**
+ * @OA\Put(
+ *     path="/api/supportservice/{id}",
+ *     summary="Update an existing Support Service",
+ *     description="Memperbarui data layanan support yang ada di database.",
+ *     tags={"SupportService"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID dari Support Service yang akan diperbarui",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             @OA\Property(property="SupportServiceName", type="string", example="Radiology"),
+ *             @OA\Property(property="LastModifiedBy", type="string", example="user123")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="SupportService updated",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="SupportServiceCode", type="string", example="SS-001"),
+ *             @OA\Property(property="SupportServiceName", type="string", example="Radiology"),
+ *             @OA\Property(property="LastModifiedBy", type="string", example="user123"),
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="SupportService not found"
+ *     )
+ * )
+ */
+
+public function update(Request $request, $id)
+{
+    // Cari data berdasarkan ID
+    $supportservice = SupportService::find($id);
 
     if (!$supportservice) {
-        return response()->json(['message' => 'Item Test not found'], 404);
+        return response()->json(['message' => 'Support service not found'], 404);
     }
 
-        // Validasi request
-        $validated = $request->validate([
-            'SupportServiceCode' => 'nullable|string|max:200',
-            'SupportServiceName' => 'nullable|string|max:200',
-            'CreateDate' => 'nullable|date',
-            'CreateBy' => 'nullable|string|max:20',
-            'LastModifiedDate' => 'nullable|date',
-            'LastModifiedBy' => 'nullable|string|max:20',
-            'gcrecord' => 'nullable|boolean',
-        ]);
+    // Validasi request
+    $validated = $request->validate([
+        'SupportServiceCode' => 'nullable|string|max:200',
+        'SupportServiceName' => 'nullable|string|max:200',
+        'CreateBy' => 'nullable|string|max:20',
+        'LastModifiedBy' => 'nullable|string|max:20',
+        'gcrecord' => 'nullable|boolean',
+    ]);
 
-        // Update data SupportService
-        $supportservice->update($validated);
+    // Update LastModifiedDate secara otomatis
+    date_default_timezone_set('Asia/Jakarta');
 
-        // Kembalikan response dengan data yang sudah diupdate
-        return response()->json($supportservice, 200);
-    }
+    $validated['LastModifiedDate'] = now()->format('Y-m-d H:i:s');
+
+    // Update data SupportService
+    $supportservice->update($validated);
+
+    // Kembalikan response dengan field yang diinginkan
+    return response()->json($supportservice->only([
+        'ID',
+        // 'SupportServiceCode',
+        'SupportServiceName',
+        // 'CreateDate',
+        // 'CreateBy',
+        'LastModifiedDate',
+        'LastModifiedBy',
+        // 'gcrecord'
+    ]), 200);
+}
 }

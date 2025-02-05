@@ -25,43 +25,45 @@ use OpenApi\Annotations as OA;
  * )
  */
 
-class Patient extends Model
-{
-    use HasFactory;
-
-    // Nama tabel di database
-    protected $table = 'Patient';
-
-    // Primary key
-    protected $primaryKey = 'ID';
-
-    // Kolom yang bisa diisi (mass assignable)
-    protected $fillable = [
-        'NIK',
-        'PatientID_Provider',
-        'FullName',
-        'Sex',
-        'BirthDate',
-        'Address',
-        'Phone',
-        'CreateBy',
-        'LastModifiedBy',
-        'gcrecord',
-    ];
-
-    // Relasi One-to-Many ke tabel Lab_Trans
-    public function labTrans()
-    {
-        return $this->hasMany(Lab_Trans::class, 'PatientID', 'id'); // 'PatientID' adalah foreign key di tabel Lab_Trans
-    }
-
-    // Kolom yang otomatis diisi (timestamps)
-    public $timestamps = false;
-
-    // Format kolom timestamp
-    protected $dates = [
-        'CreateDate',
-        'LastModifiedDate',
-        'BirthDate',
-    ];
-}
+ class Patient extends Model
+ {
+     use HasFactory;
+ 
+     // Nama tabel di database
+     protected $table = 'Patient';
+ 
+     // Primary key
+     protected $primaryKey = 'ID';
+ 
+     // Kolom yang bisa diisi (mass assignable)
+     protected $fillable = [
+         'NIK',
+         'PatientID_Provider',
+         'FullName',
+         'Sex',
+         'BirthDate',
+         'Address',
+         'Phone',
+         'CreateBy',
+         'LastModifiedBy',
+         'gcrecord',
+         'CreateDate', // Tambahkan CreateDate agar bisa diisi dalam mass assignment
+         'LastModifiedDate'
+     ];
+ 
+     // Relasi One-to-Many ke tabel Lab_Trans
+     public function labTrans()
+     {
+         return $this->hasMany(Lab_Trans::class, 'PatientID', 'ID'); // 'PatientID' adalah foreign key di tabel Lab_Trans
+     }
+ 
+     // Kolom yang otomatis diisi (timestamps)
+     public $timestamps = false;
+ 
+     // Format kolom timestamp
+     protected $dates = [
+         'CreateDate',
+         'LastModifiedDate',
+         'BirthDate',
+     ];
+ }

@@ -44,28 +44,71 @@
                 "tags": [
                     "Item Test"
                 ],
-                "summary": "Create a new Item Test",
+                "summary": "Tambah data item baru",
+                "description": "Menambahkan item baru ke dalam database.",
                 "operationId": "24aa2a8a1691ea73344effeee35eaa80",
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/ItemTest"
+                                "required": [
+                                    "ItemTestCode",
+                                    "ItemTestName"
+                                ],
+                                "properties": {
+                                    "ItemTestCode": {
+                                        "type": "string",
+                                        "example": "ITC-001"
+                                    },
+                                    "ItemTestName": {
+                                        "type": "string",
+                                        "example": "Test Hemoglobin"
+                                    },
+                                    "Group": {
+                                        "type": "string",
+                                        "example": "Hematologi"
+                                    },
+                                    "SubGroup": {
+                                        "type": "string",
+                                        "example": "Darah"
+                                    },
+                                    "Descriptions": {
+                                        "type": "string",
+                                        "example": "Tes kadar hemoglobin dalam darah"
+                                    },
+                                    "CreateBy": {
+                                        "type": "string",
+                                        "example": "admin"
+                                    }
+                                },
+                                "type": "object"
                             }
                         }
                     }
                 },
                 "responses": {
                     "201": {
-                        "description": "The created Item Test",
+                        "description": "Item berhasil ditambahkan",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ItemTest"
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Item created successfully"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/ItemTest"
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
+                    },
+                    "400": {
+                        "description": "Bad request"
                     }
                 }
             }
@@ -76,12 +119,13 @@
                     "Item Test"
                 ],
                 "summary": "Update an existing Item Test",
+                "description": "Memperbarui item test berdasarkan ID.",
                 "operationId": "0689c15d32d597ce2280e4a6be1f6e6a",
                 "parameters": [
                     {
                         "name": "ID",
                         "in": "path",
-                        "description": "ID of the Item Test to update",
+                        "description": "ID dari Item Test yang akan diperbarui",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -93,24 +137,62 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/ItemTest"
+                                "required": [
+                                    "ItemTestCode",
+                                    "ItemTestName"
+                                ],
+                                "properties": {
+                                    "ItemTestName": {
+                                        "type": "string",
+                                        "example": "Test Hemoglobin"
+                                    },
+                                    "Group": {
+                                        "type": "string",
+                                        "example": "Hematologi"
+                                    },
+                                    "SubGroup": {
+                                        "type": "string",
+                                        "example": "Darah"
+                                    },
+                                    "Descriptions": {
+                                        "type": "string",
+                                        "example": "Tes kadar hemoglobin dalam darah"
+                                    },
+                                    "LastModifiedBy": {
+                                        "type": "string",
+                                        "example": "admin"
+                                    }
+                                },
+                                "type": "object"
                             }
                         }
                     }
                 },
                 "responses": {
                     "200": {
-                        "description": "Updated Item Test",
+                        "description": "Item berhasil diperbarui",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ItemTest"
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Item updated successfully"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/ItemTest"
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
                     },
                     "404": {
-                        "description": "Item Test not found"
+                        "description": "Item Test tidak ditemukan"
+                    },
+                    "400": {
+                        "description": "Bad request"
                     }
                 }
             }
@@ -188,10 +270,6 @@
                                         "type": "integer",
                                         "example": 1
                                     },
-                                    "Age": {
-                                        "type": "string",
-                                        "example": "30"
-                                    },
                                     "Anamnesa": {
                                         "type": "string",
                                         "example": "Pasien mengalami demam tinggi"
@@ -228,36 +306,14 @@
                                         "type": "string",
                                         "example": "Completed"
                                     },
-                                    "CreateDate": {
-                                        "type": "string",
-                                        "format": "date",
-                                        "example": "2024-09-06"
-                                    },
                                     "CreateBy": {
                                         "type": "string",
                                         "example": "admin"
-                                    },
-                                    "LastModifiedDate": {
-                                        "type": "string",
-                                        "format": "date",
-                                        "example": "2024-09-06"
-                                    },
-                                    "LastModifiedBy": {
-                                        "type": "string",
-                                        "example": "admin"
-                                    },
-                                    "gcrecord": {
-                                        "type": "boolean",
-                                        "example": false
                                     },
                                     "Lab_Trans_Details": {
                                         "type": "array",
                                         "items": {
                                             "properties": {
-                                                "LabTransId": {
-                                                    "type": "integer",
-                                                    "example": 201
-                                                },
                                                 "ItemTestID": {
                                                     "type": "integer",
                                                     "example": 101
@@ -278,27 +334,9 @@
                                                     "type": "string",
                                                     "example": "Normal"
                                                 },
-                                                "CreateDate": {
-                                                    "type": "string",
-                                                    "format": "date",
-                                                    "example": "2024-09-06"
-                                                },
                                                 "CreateBy": {
                                                     "type": "string",
                                                     "example": "admin"
-                                                },
-                                                "LastModifiedDate": {
-                                                    "type": "string",
-                                                    "format": "date",
-                                                    "example": "2024-09-06"
-                                                },
-                                                "LastModifiedBy": {
-                                                    "type": "string",
-                                                    "example": "normal"
-                                                },
-                                                "gcrecord": {
-                                                    "type": "boolean",
-                                                    "example": "false"
                                                 }
                                             },
                                             "type": "object"
@@ -308,10 +346,6 @@
                                         "type": "array",
                                         "items": {
                                             "properties": {
-                                                "LabTransId": {
-                                                    "type": "integer",
-                                                    "example": 201
-                                                },
                                                 "SupportServiceID": {
                                                     "type": "integer",
                                                     "example": 201
@@ -320,27 +354,9 @@
                                                     "type": "string",
                                                     "example": "Rontgen dada dilakukan"
                                                 },
-                                                "CreateDate": {
-                                                    "type": "string",
-                                                    "format": "date",
-                                                    "example": "2024-09-06"
-                                                },
                                                 "CreateBy": {
                                                     "type": "string",
                                                     "example": "admin"
-                                                },
-                                                "LastModifiedDate": {
-                                                    "type": "string",
-                                                    "format": "date",
-                                                    "example": "2024-09-06"
-                                                },
-                                                "LastModifiedBy": {
-                                                    "type": "string",
-                                                    "example": "normal"
-                                                },
-                                                "gcrecord": {
-                                                    "type": "boolean",
-                                                    "example": "false"
                                                 }
                                             },
                                             "type": "object"
@@ -492,11 +508,6 @@
                                         "type": "string",
                                         "example": "Completed"
                                     },
-                                    "LastModifiedDate": {
-                                        "type": "string",
-                                        "format": "date-time",
-                                        "example": "2024-09-06T12:30:00"
-                                    },
                                     "LastModifiedBy": {
                                         "type": "string",
                                         "example": "admin"
@@ -505,10 +516,6 @@
                                         "type": "array",
                                         "items": {
                                             "properties": {
-                                                "LabTransId": {
-                                                    "type": "integer",
-                                                    "example": 201
-                                                },
                                                 "ItemTestID": {
                                                     "type": "integer",
                                                     "example": 101
@@ -527,21 +534,7 @@
                                                 },
                                                 "ResultNotes": {
                                                     "type": "string",
-                                                    "example": "Normal"
-                                                },
-                                                "CreateDate": {
-                                                    "type": "string",
-                                                    "format": "date",
-                                                    "example": "2024-09-06"
-                                                },
-                                                "CreateBy": {
-                                                    "type": "string",
-                                                    "example": "admin"
-                                                },
-                                                "LastModifiedDate": {
-                                                    "type": "string",
-                                                    "format": "date",
-                                                    "example": "2024-09-06"
+                                                    "example": "Norma"
                                                 },
                                                 "LastModifiedBy": {
                                                     "type": "string",
@@ -559,10 +552,6 @@
                                         "type": "array",
                                         "items": {
                                             "properties": {
-                                                "LabTransId": {
-                                                    "type": "integer",
-                                                    "example": 201
-                                                },
                                                 "SupportServiceID": {
                                                     "type": "integer",
                                                     "example": 201
@@ -570,20 +559,6 @@
                                                 "SupportServiceNotes": {
                                                     "type": "string",
                                                     "example": "Rontgen dada dilakukan"
-                                                },
-                                                "CreateDate": {
-                                                    "type": "string",
-                                                    "format": "date",
-                                                    "example": "2024-09-06"
-                                                },
-                                                "CreateBy": {
-                                                    "type": "string",
-                                                    "example": "admin"
-                                                },
-                                                "LastModifiedDate": {
-                                                    "type": "string",
-                                                    "format": "date",
-                                                    "example": "2024-09-06"
                                                 },
                                                 "LastModifiedBy": {
                                                     "type": "string",
@@ -729,6 +704,14 @@
                         "application/json": {
                             "schema": {
                                 "properties": {
+                                    "ItemTestID": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "LabTransID": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
                                     "ResultValue": {
                                         "type": "string",
                                         "example": "Positive"
@@ -745,13 +728,9 @@
                                         "type": "string",
                                         "example": "Normal Range"
                                     },
-                                    "ItemTestID": {
-                                        "type": "integer",
-                                        "example": 5
-                                    },
-                                    "LabTransID": {
-                                        "type": "integer",
-                                        "example": 5
+                                    "LastModifiedBy": {
+                                        "type": "string",
+                                        "example": "Admin"
                                     }
                                 },
                                 "type": "object"
@@ -847,14 +826,13 @@
                         "application/json": {
                             "schema": {
                                 "properties": {
+                                    "LabTransID": {
+                                        "type": "integer"
+                                    },
+                                    "SupportServiceID": {
+                                        "type": "integer"
+                                    },
                                     "SupportServiceNotes": {
-                                        "type": "string"
-                                    },
-                                    "CreateDate": {
-                                        "type": "string",
-                                        "format": "date"
-                                    },
-                                    "CreateBy": {
                                         "type": "string"
                                     },
                                     "LastModifiedDate": {
@@ -863,15 +841,6 @@
                                     },
                                     "LastModifiedBy": {
                                         "type": "string"
-                                    },
-                                    "LabTransID": {
-                                        "type": "integer"
-                                    },
-                                    "SupportServiceID": {
-                                        "type": "integer"
-                                    },
-                                    "gcrecord": {
-                                        "type": "integer"
                                     }
                                 },
                                 "type": "object"
@@ -985,14 +954,6 @@
                                     "CreateBy": {
                                         "type": "string",
                                         "example": "admin"
-                                    },
-                                    "LastModifiedBy": {
-                                        "type": "string",
-                                        "example": "admin"
-                                    },
-                                    "gcrecord": {
-                                        "type": "boolean",
-                                        "example": true
                                     }
                                 },
                                 "type": "object"
@@ -1031,13 +992,14 @@
                 "tags": [
                     "Pasien"
                 ],
-                "summary": "Update an existing Patient",
+                "summary": "Perbarui data pasien yang ada",
+                "description": "Memperbarui informasi pasien berdasarkan ID yang diberikan.",
                 "operationId": "ff1aa41bfd8f5c0034823c6acd18040b",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ID of the Patient to update",
+                        "description": "ID pasien yang akan diperbarui",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -1049,24 +1011,72 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/Patient"
+                                "required": [
+                                    "FullName",
+                                    "Sex",
+                                    "BirthDate",
+                                    "Address",
+                                    "Phone",
+                                    "LastModifiedBy"
+                                ],
+                                "properties": {
+                                    "FullName": {
+                                        "type": "string",
+                                        "example": "Jane Doe"
+                                    },
+                                    "Sex": {
+                                        "type": "string",
+                                        "enum": [
+                                            "M",
+                                            "F"
+                                        ],
+                                        "example": "F"
+                                    },
+                                    "BirthDate": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "1995-05-15"
+                                    },
+                                    "Address": {
+                                        "type": "string",
+                                        "example": "Jl. Contoh No.2"
+                                    },
+                                    "Phone": {
+                                        "type": "string",
+                                        "example": "081298765432"
+                                    },
+                                    "LastModifiedBy": {
+                                        "type": "string",
+                                        "example": "admin"
+                                    }
+                                },
+                                "type": "object"
                             }
                         }
                     }
                 },
                 "responses": {
                     "200": {
-                        "description": "Updated Patient",
+                        "description": "Pasien berhasil diperbarui",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Patient"
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Patient updated successfully"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Patient"
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
                     },
                     "404": {
-                        "description": "Patient not found"
+                        "description": "Pasien tidak ditemukan"
                     }
                 }
             }
@@ -1086,8 +1096,7 @@
                         "description": "Search support services by code or name",
                         "required": false,
                         "schema": {
-                            "type": "string",
-                            "example": "Health"
+                            "type": "string"
                         }
                     }
                 ],
@@ -1111,14 +1120,29 @@
                 "tags": [
                     "SupportService"
                 ],
-                "summary": "Create a new Support Service",
+                "summary": "Tambah data pasien baru",
+                "description": "Menambahkan pasien baru ke dalam database.",
                 "operationId": "3fe2020d7e0ff6ad1e5e1de4919f1008",
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/SupportService"
+                                "properties": {
+                                    "SupportServiceCode": {
+                                        "type": "string",
+                                        "example": "SS-001"
+                                    },
+                                    "SupportServiceName": {
+                                        "type": "string",
+                                        "example": "Radiology"
+                                    },
+                                    "CreateBy": {
+                                        "type": "string",
+                                        "example": "admin"
+                                    }
+                                },
+                                "type": "object"
                             }
                         }
                     }
@@ -1143,12 +1167,13 @@
                     "SupportService"
                 ],
                 "summary": "Update an existing Support Service",
+                "description": "Memperbarui data layanan support yang ada di database.",
                 "operationId": "c0648888cbd9e82e16c4cdc4184f6110",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ID of the Support Service to update",
+                        "description": "ID dari Support Service yang akan diperbarui",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -1160,7 +1185,17 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/SupportService"
+                                "properties": {
+                                    "SupportServiceName": {
+                                        "type": "string",
+                                        "example": "Radiology"
+                                    },
+                                    "LastModifiedBy": {
+                                        "type": "string",
+                                        "example": "user123"
+                                    }
+                                },
+                                "type": "object"
                             }
                         }
                     }
@@ -1171,7 +1206,21 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/SupportService"
+                                    "properties": {
+                                        "SupportServiceCode": {
+                                            "type": "string",
+                                            "example": "SS-001"
+                                        },
+                                        "SupportServiceName": {
+                                            "type": "string",
+                                            "example": "Radiology"
+                                        },
+                                        "LastModifiedBy": {
+                                            "type": "string",
+                                            "example": "user123"
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
@@ -1272,20 +1321,6 @@
                         "type": "string",
                         "maxLength": 20,
                         "nullable": true
-                    },
-                    "LastModifiedDate": {
-                        "type": "string",
-                        "format": "date",
-                        "nullable": true
-                    },
-                    "LastModifiedBy": {
-                        "type": "string",
-                        "maxLength": 20,
-                        "nullable": true
-                    },
-                    "gcrecord": {
-                        "type": "boolean",
-                        "example": false
                     }
                 },
                 "type": "object"

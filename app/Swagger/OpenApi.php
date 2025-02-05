@@ -23,9 +23,6 @@ use OpenApi\Annotations as OA;
  *     @OA\Property(property="Descriptions", type="string", maxLength=250, nullable=true),
  *     @OA\Property(property="CreateDate", type="string", format="date", nullable=true),
  *     @OA\Property(property="CreateBy", type="string", maxLength=20, nullable=true),
- *     @OA\Property(property="LastModifiedDate", type="string", format="date", nullable=true),
- *     @OA\Property(property="LastModifiedBy", type="string", maxLength=20, nullable=true),
- *     @OA\Property(property="gcrecord", type="boolean", example=false)
  * )
  */
 
@@ -121,9 +118,9 @@ use OpenApi\Annotations as OA;
  *     @OA\Property(property="ID", type="integer", example=1),
  *     @OA\Property(property="SupportServiceCode", type="string", example="SS123"),
  *     @OA\Property(property="SupportServiceName", type="string", example="Blood Test"),
- *         @OA\Property(property="CreateDate", type="string", format="date", nullable=true),
+ *     @OA\Property(property="CreateDate", type="string", format="date", nullable=true),
  *     @OA\Property(property="CreateBy", type="string", example="admin"),
- * @OA\Property(property="LastModifiedDate", type="string", format="date", nullable=true),
+ *     @OA\Property(property="LastModifiedDate", type="string", format="date", nullable=true),
  *     @OA\Property(property="LastModifiedBy", type="string", example="admin"),
  *     @OA\Property(property="gcrecord", type="boolean", example=false)
  * )

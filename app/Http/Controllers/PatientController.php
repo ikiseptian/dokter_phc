@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Patient;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
+
 
 class PatientController extends Controller
 {
@@ -31,30 +33,45 @@ class PatientController extends Controller
      * )
      */
     public function index(Request $request)
-    {
-        $query = Patient::whereNull('gcrecord')->orWhere('gcrecord', 0); // Filter gcrecord diterapkan di awal
-    
-        if ($request->has('search') && !empty($request->search)) {
-            $search = $request->search;
-    
-            $query->where(function ($q) use ($search) {
-                $q->where('NIK', 'LIKE', "%{$search}%")
-                    ->orWhere('PatientID_Provider', 'LIKE', "%{$search}%")
-                    ->orWhere('FullName', 'LIKE', "%{$search}%")
-                    ->orWhere('Sex', 'LIKE', "%{$search}%")
-                    ->orWhere('BirthDate', 'LIKE', "%{$search}%")
-                    ->orWhere('Address', 'LIKE', "%{$search}%")
-                    ->orWhere('Phone', 'LIKE', "%{$search}%")
-                    ->orWhere('CreateBy', 'LIKE', "%{$search}%")
-                    ->orWhere('LastModifiedBy', 'LIKE', "%{$search}%");
-            });
-        }
-    
-        $patients = $query->get();
-    
-        return response()->json($patients, 200);
+{
+    $patient = Patient::whereNull('gcrecord')->orWhere('gcrecord', 0); // Filter gcrecord diterapkan di awal
+
+    if ($request->has('search') && !empty($request->search)) {
+        $search = $request->search;
+
+        $patient->where(function ($q) use ($search) {
+            $q->where('NIK', 'LIKE', "%{$search}%")
+                ->orWhere('PatientID_Provider', 'LIKE', "%{$search}%")
+                ->orWhere('FullName', 'LIKE', "%{$search}%")
+                ->orWhere('Sex', 'LIKE', "%{$search}%")
+                ->orWhere('BirthDate', 'LIKE', "%{$search}%")
+                ->orWhere('Address', 'LIKE', "%{$search}%")
+                ->orWhere('Phone', 'LIKE', "%{$search}%")
+                ->orWhere('CreateBy', 'LIKE', "%{$search}%")
+                ->orWhere('LastModifiedBy', 'LIKE', "%{$search}%");
+        });
     }
-    
+
+    // Ambil data dengan memastikan CreateDate di-cast sebagai datetime
+    $formattedData = $patient->get()->map(function ($patient) {
+        return [
+            'ID' => $patient->ID,
+            'NIK' => $patient->NIK,
+            'FullName' => $patient->FullName,
+            'Sex' => $patient->Sex,
+            'BirthDate' => $patient->BirthDate,
+            'Phone' => $patient->Phone,
+            'Address' => $patient->Address,
+            'CreateDate' => $patient->getOriginal('CreateDate') ? date('Y-m-d H:i:s', strtotime($patient->getOriginal('CreateDate'))) : null,
+            'CreateBy' => $patient->CreateBy,
+            'LastModifiedDate' => $patient->LastModifiedDate,
+            'LastModifiedBy' => $patient->LastModifiedBy
+        ];
+    });
+
+    return response()->json($formattedData, 200);
+}
+
 
     /**
      * @OA\Post(
@@ -74,8 +91,6 @@ class PatientController extends Controller
      *             @OA\Property(property="Address", type="string", example="Jl. Contoh No.1"),
      *             @OA\Property(property="Phone", type="string", example="081234567890"),
      *             @OA\Property(property="CreateBy", type="string", example="admin"),
-     *             @OA\Property(property="LastModifiedBy", type="string", example="admin"),
-     *             @OA\Property(property="gcrecord", type="boolean", example=true)
      *         )
      *     ),
      *     @OA\Response(
@@ -91,89 +106,121 @@ class PatientController extends Controller
      * )
      */
     public function store(Request $request)
-    {
-        $validatedData = $request->validate([
-            'NIK' => 'required|string|size:16',
-            'PatientID_Provider' => 'required|string|max:20',
-            'FullName' => 'nullable|string|max:50',
-            'Sex' => 'nullable|string|in:M,F',
-            'BirthDate' => 'nullable|date',
-            'Address' => 'nullable|string|max:250',
-            'Phone' => 'nullable|string|max:50',
-            'CreateBy' => 'nullable|string|max:20',
-            'LastModifiedBy' => 'nullable|string|max:20',
-            'gcrecord' => 'nullable|boolean',
-        ]);
+{
+    $validated = $request->validate([
+        'NIK' => 'required|string|size:16|unique:Patient,NIK',
+        'PatientID_Provider' => 'required|string|max:20',
+        'FullName' => 'nullable|string|max:50',
+        'Sex' => 'nullable|string|in:M,F',
+        'BirthDate' => 'nullable|date',
+        'Address' => 'nullable|string|max:250',
+        'Phone' => 'nullable|string|max:50',
+        'CreateBy' => 'nullable|string|max:20',
+        'LastModifiedBy' => 'nullable|string|max:20',
+        'gcrecord' => 'nullable|boolean',
+    ]);
 
-        $patient = Patient::create([
-            'NIK' => $validatedData['NIK'],
-            'PatientID_Provider' => $validatedData['PatientID_Provider'],
-            'FullName' => $validatedData['FullName'] ?? null,
-            'Sex' => $validatedData['Sex'] ?? null,
-            'BirthDate' => $validatedData['BirthDate'] ?? null,
-            'Address' => $validatedData['Address'] ?? null,
-            'Phone' => $validatedData['Phone'] ?? null,
-            'CreateBy' => $validatedData['CreateBy'],
-            'LastModifiedBy' => $validatedData['LastModifiedBy'],
-            'gcrecord' => $validatedData['gcrecord'],
-        ]);
+    // Set zona waktu ke Indonesia (Jawa Barat)
+    date_default_timezone_set('Asia/Jakarta');
+    
+    // Pastikan gcrecord selalu false atau 0
+    $validated['gcrecord'] = false; // atau gunakan `0` jika di database berupa integer
+    $validated['CreateDate'] = now()->toDateTimeString();
 
-        return response()->json([
-            'message' => 'Patient created successfully',
-            'data' => $patient
-        ], 201);
-    }
+    $patient = Patient::create($validated);
+    $patient->refresh(); // Memastikan data terbaru diambil dari database
 
-    /**
- * @OA\Put(
- *     path="/api/pasien/{id}",
- *     summary="Update an existing Patient",
- *      tags={"Pasien"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the Patient to update",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\RequestBody(
- *         required=true,
- *         @OA\JsonContent(ref="#/components/schemas/Patient")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Updated Patient",
- *         @OA\JsonContent(ref="#/components/schemas/Patient")
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Patient not found"
- *     )
- * )
- */
-public function update(Request $request, $id)
+    return response()->json([
+        'message' => 'Patient record created successfully',
+        'data' => [
+            'ID' => $patient->ID,
+            'NIK' => $patient->NIK,
+            'PatientID_Provider' => $patient->PatientID_Provider,
+            'FullName' => $patient->FullName,
+            'Sex' => $patient->Sex,
+            'BirthDate' => $patient->BirthDate,
+            'Address' => $patient->Address,
+            'Phone' => $patient->Phone,
+            'CreateDate' => !empty($patient->CreateDate) ? Carbon::parse($patient->CreateDate)->format('Y-m-d H:i:s') : now()->format('Y-m-d H:i:s'),
+            'CreateBy' => $patient->CreateBy,
+        ]
+    ], 201);
+}
+
+
+
+
+       /**
+     * @OA\Put(
+     *     path="/api/pasien/{id}",
+     *     summary="Perbarui data pasien yang ada",
+     *     description="Memperbarui informasi pasien berdasarkan ID yang diberikan.",
+     *     tags={"Pasien"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID pasien yang akan diperbarui",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"FullName", "Sex", "BirthDate", "Address", "Phone", "LastModifiedBy"},
+     *             @OA\Property(property="FullName", type="string", example="Jane Doe"),
+     *             @OA\Property(property="Sex", type="string", enum={"M", "F"}, example="F"),
+     *             @OA\Property(property="BirthDate", type="string", format="date", example="1995-05-15"),
+     *             @OA\Property(property="Address", type="string", example="Jl. Contoh No.2"),
+     *             @OA\Property(property="Phone", type="string", example="081298765432"),
+     *             @OA\Property(property="LastModifiedBy", type="string", example="admin"),
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Pasien berhasil diperbarui",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Patient updated successfully"),
+     *             @OA\Property(property="data", ref="#/components/schemas/Patient")
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Pasien tidak ditemukan")
+     * )
+     */
+    public function update(Request $request, $id)
 {
     $patient = Patient::where('ID', $id)->where('gcrecord', 0)->first();
 
     if (!$patient) {
         return response()->json(['message' => 'Patient not found'], 404);
     }
-    // dd($patient);
 
-    $request->validate([
+    $validatedData = $request->validate([
         'FullName' => 'sometimes|string|max:255',
-        'Sex' => 'sometimes|string|max:10',
+        'Sex' => 'sometimes|string|in:M,F',
         'BirthDate' => 'nullable|date',
         'Address' => 'nullable|string|max:255',
         'Phone' => 'nullable|string|max:20',
-        'CreateBy' => 'nullable|string|max:50',
         'LastModifiedBy' => 'nullable|string|max:50',
         'gcrecord' => 'nullable|boolean',
     ]);
 
-    $patient->update($request->all());
+    date_default_timezone_set('Asia/Jakarta');
 
-    return response()->json($patient);
+    // Pastikan LastModifiedDate selalu diisi dengan waktu sekarang
+    $validatedData['LastModifiedDate'] = now()->format('Y-m-d H:i:s');
+
+    $patient->update($validatedData);
+
+    return response()->json([
+        'ID' => $patient->ID,
+        'FullName' => $patient->FullName,
+        'Sex' => $patient->Sex,
+        'BirthDate' => $patient->BirthDate,
+        'Address' => $patient->Address,
+        'Phone' => $patient->Phone,
+        'LastModifiedDate' => $patient->LastModifiedDate ?? now()->format('Y-m-d H:i:s'),
+        'LastModifiedBy' => $patient->LastModifiedBy,
+    ], 200);
 }
-
 }

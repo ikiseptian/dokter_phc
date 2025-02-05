@@ -37,52 +37,111 @@ class ItemTestController extends Controller
         $items = ItemTest::where('gcrecord', 0)
             ->when($query, function ($q) use ($query) {
                 $q->where('ItemTestCode', 'LIKE', "%{$query}%")
-                  ->orWhere('ItemTestName', 'LIKE', "%{$query}%")
-                  ->orWhere('Group', 'LIKE', "%{$query}%")
-                  ->orWhere('SubGroup', 'LIKE', "%{$query}%")
-                  ->orWhere('Descriptions', 'LIKE', "%{$query}%");
-            })
-            ->get();
+                    ->orWhere('ItemTestName', 'LIKE', "%{$query}%")
+                    ->orWhere('Group', 'LIKE', "%{$query}%")
+                    ->orWhere('SubGroup', 'LIKE', "%{$query}%")
+                    ->orWhere('Descriptions', 'LIKE', "%{$query}%");
+            });
 
-        return response()->json($items);
+        $formattedData = $items->get()->map(function ($items) {
+            return [
+                'ID' => $items->ID,
+                'ItemTestCode' => $items->ItemTestCode,
+                'ItemTestName' => $items->ItemTestName,
+                'Group' => $items->Group,
+                'SubGroup' => $items->SubGroup,
+                'Descriptions' => $items->Descriptions,
+                'CreateDate' => $items->CreateDate,
+                'CreateBy' => $items->CreateBy,
+                'LastModifiedDate' => $items->LastModifiedDate,
+                'LastModifiedBy' => $items->LastModifiedBy,
+                // 'gcrecord' => $items->gcrecord,
+            ];
+        });
+
+
+
+        return response()->json($formattedData, 200);
     }
 
 
     /**
      * @OA\Post(
      *     path="/api/itemtest",
-     *     summary="Create a new Item Test",
-     *      tags={"Item Test"},
+     *     summary="Tambah data item baru",
+     *     description="Menambahkan item baru ke dalam database.",
+     *     tags={"Item Test"},
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\JsonContent(ref="#/components/schemas/ItemTest")
+     *         @OA\JsonContent(
+     *             required={"ItemTestCode", "ItemTestName"},
+     *             @OA\Property(property="ItemTestCode", type="string", example="ITC-001"),
+     *             @OA\Property(property="ItemTestName", type="string", example="Test Hemoglobin"),
+     *             @OA\Property(property="Group", type="string", example="Hematologi"),
+     *             @OA\Property(property="SubGroup", type="string", example="Darah"),
+     *             @OA\Property(property="Descriptions", type="string", example="Tes kadar hemoglobin dalam darah"),
+     *             @OA\Property(property="CreateBy", type="string", example="admin"),
+     *         )
      *     ),
      *     @OA\Response(
      *         response=201,
-     *         description="The created Item Test",
-     *         @OA\JsonContent(ref="#/components/schemas/ItemTest")
-     *     )
+     *         description="Item berhasil ditambahkan",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Item created successfully"),
+     *             @OA\Property(property="data", ref="#/components/schemas/ItemTest")
+     *         )
+     *     ),
+     *     @OA\Response(response=400, description="Bad request")
      * )
      */
-    public function store(Request $request)
-    {
-        $request->validate([
-            'ItemTestCode' => 'required|string|max:10',
-            'ItemTestName' => 'required|string|max:30',
-            'Group' => 'nullable|string|max:30',
-            'SubGroup' => 'nullable|string|max:30',
-            'Descriptions' => 'nullable|string|max:250',
-            'CreateDate' => 'nullable|date',
-            'CreateBy' => 'nullable|string|max:20',
-            'LastModifiedDate' => 'nullable|date',
-            'LastModifiedBy' => 'nullable|string|max:20',
-            'gcrecord' => 'nullable|boolean',
-        ]);
 
-        $item = ItemTest::create($request->all());
+     
+     
+    
 
-        return response()->json($item, 201);
-    }
+public function store(Request $request)
+{
+    // Validasi input
+    $validated = $request->validate([
+        'ItemTestCode' => 'required|string|max:10|unique:Item_Test,ItemTestCode', // Validasi unik
+        'ItemTestName' => 'required|string|max:30',
+        'Group' => 'nullable|string|max:30',
+        'SubGroup' => 'nullable|string|max:30',
+        'Descriptions' => 'nullable|string|max:250',
+        'CreateBy' => 'nullable|string|max:20',
+        'gcrecord' => 'nullable|boolean',
+    ]);
+
+    // Set timezone secara eksplisit
+    date_default_timezone_set('Asia/Jakarta');
+
+    // Tambahkan CreateDate dengan format timestamp agar cocok dengan kolom datetime di database
+    $validated['CreateDate'] = now()->format('Y-m-d H:i:s');
+
+    // Jika gcrecord tidak dikirim, set default ke false
+    $validated['gcrecord'] = $validated['gcrecord'] ?? false;
+
+    // Simpan ke database
+    $item = ItemTest::create($validated);
+
+    // Response body dengan format yang benar
+    return response()->json([
+        'message' => 'Item created successfully',
+        'data' => [
+            'ID' =>$item->ID,
+            'ItemTestCode' => $item->ItemTestCode,
+            'ItemTestName' => $item->ItemTestName,
+            'Group' => $item->Group,
+            'SubGroup' => $item->SubGroup,
+            'Descriptions' => $item->Descriptions,
+            'CreateDate' => $item->CreateDate, // Jangan panggil format() karena sudah dalam format datetime
+            'CreateBy' => $item->CreateBy,
+        ]
+    ], 201);
+}
+
+     
     public function dashboard()
     {
         // Pastikan path view sesuai dengan lokasi file
@@ -90,58 +149,83 @@ class ItemTestController extends Controller
     }
 
 
-        /**
-     * @OA\Put(
-     *     path="/api/itemtest/{ID}",
-     *     summary="Update an existing Item Test",
-     *      tags={"Item Test"},
-     *     @OA\Parameter(
-     *         name="ID",
-     *         in="path",
-     *         required=true,
-     *         description="ID of the Item Test to update",
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(ref="#/components/schemas/ItemTest")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Updated Item Test",
-     *         @OA\JsonContent(ref="#/components/schemas/ItemTest")
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Item Test not found"
-     *     )
-     * )
-     */
-    public function update(Request $request, $id)
+    /**
+ * @OA\Put(
+ *     path="/api/itemtest/{ID}",
+ *     summary="Update an existing Item Test",
+ *     description="Memperbarui item test berdasarkan ID.",
+ *     tags={"Item Test"},
+ *     @OA\Parameter(
+ *         name="ID",
+ *         in="path",
+ *         required=true,
+ *         description="ID dari Item Test yang akan diperbarui",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={"ItemTestCode", "ItemTestName"},
+ *             @OA\Property(property="ItemTestName", type="string", example="Test Hemoglobin"),
+ *             @OA\Property(property="Group", type="string", example="Hematologi"),
+ *             @OA\Property(property="SubGroup", type="string", example="Darah"),
+ *             @OA\Property(property="Descriptions", type="string", example="Tes kadar hemoglobin dalam darah"),
+ *             @OA\Property(property="LastModifiedBy", type="string", example="admin"),
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Item berhasil diperbarui",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Item updated successfully"),
+ *             @OA\Property(property="data", ref="#/components/schemas/ItemTest")
+ *         )
+ *     ),
+ *     @OA\Response(response=404, description="Item Test tidak ditemukan"),
+ *     @OA\Response(response=400, description="Bad request")
+ * )
+ */
+public function update(Request $request, $id)
 {
-    // Menggunakan where dengan ID besar
-    $item = ItemTest::where('ID', $id)->where('gcrecord', 0)->first();
+    // Cari item berdasarkan ID
+    $item = ItemTest::find($id);
 
     if (!$item) {
-        return response()->json(['message' => 'Item Test not found'], 404);
+        return response()->json(['message' => 'Item not found'], 404);
     }
 
-    $request->validate([
-        'ItemTestCode' => 'sometimes|string|max:10',
-        'ItemTestName' => 'sometimes|string|max:30',
+    $validated = $request->validate([
+        'ItemTestCode' => 'string|max:10',
+        'ItemTestName' => 'required|string|max:30',
         'Group' => 'nullable|string|max:30',
         'SubGroup' => 'nullable|string|max:30',
         'Descriptions' => 'nullable|string|max:250',
-        'CreateDate' => 'nullable|date',
-        'CreateBy' => 'nullable|string|max:20',
-        'LastModifiedDate' => 'nullable|date',
-        'LastModifiedBy' => 'nullable|string|max:20',
+        'LastModifiedBy' => 'nullable|string|max:250',
         'gcrecord' => 'nullable|boolean',
     ]);
 
-    $item->update($request->all());
+    // Set nilai `LastModifiedDate` dan `LastModifiedBy`
+    date_default_timezone_set('Asia/Jakarta');
 
-    return response()->json($item);
+    // Tambahkan CreateDate dengan format timestamp agar cocok dengan kolom datetime di database
+    $validated['LastModifiedDate'] = now()->format('Y-m-d H:i:s');
+
+    // $validated['LastModifiedBy'] = $request->input('CreateBy', 'admin');
+
+    // Update item
+    $item->update($validated);
+
+    // Sembunyikan field `CreateDate` dalam response
+    return response()->json($item->only([
+        'ID',
+        'ItemTestCode',
+        'ItemTestName',
+        'Group',
+        'SubGroup',
+        'Descriptions',
+        'LastModifiedDate',
+        'LastModifiedBy'
+    ]), 200);
 }
-
 }

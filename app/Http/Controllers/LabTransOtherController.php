@@ -69,47 +69,48 @@ class LabTransOtherController extends Controller
         $formattedData = $labTransOthers->map(function ($labTransOther) {
             return [
                 'ID' => $labTransOther->ID,
+                'LabTransID' => $labTransOther->LabTransID,
+                'SupportServiceID' => $labTransOther->SupportServiceID,
+                'SupportService' => $labTransOther->supportService ? [
+                    'SupportServiceCode' => $labTransOther->supportService->SupportServiceCode,
+                    'SupportServiceName' => $labTransOther->supportService->SupportServiceName,
+                    // 'CreateDate' => $labTransOther->supportService->CreateDate,
+                    // 'CreateBy' => $labTransOther->supportService->CreateBy,
+                    // 'LastModifiedDate' => $labTransOther->supportService->LastModifiedDate,
+                    // 'LastModifiedBy' => $labTransOther->supportService->LastModifiedBy,
+                ] : null,
+
                 'SupportServiceNotes' => $labTransOther->SupportServiceNotes,
                 'CreateDate' => $labTransOther->CreateDate,
                 'CreateBy' => $labTransOther->CreateBy,
                 'LastModifiedDate' => $labTransOther->LastModifiedDate,
                 'LastModifiedBy	' => $labTransOther->LastModifiedBy,
-                'gcrecord' => $labTransOther->gcrecord,
+                // 'gcrecord' => $labTransOther->gcrecord,
 
-                'LabTransID' => $labTransOther->LabTransID,
-                'LabTrans' => $labTransOther->labTrans ? [
-                    'LabNumber'        => $labTransOther->labTrans->LabNumber,
-                    'LabTest'          => $labTransOther->labTrans->LabTest,
-                    'TransDate'        => $labTransOther->labTrans->TransDate,
-                    'DoctorReferral'   => $labTransOther->labTrans->DoctorReferral,
-                    'PatientID'        => $labTransOther->labTrans->PatientID,
-                    'Age'              => $labTransOther->labTrans->Age,
-                    'Anamnesa'         => $labTransOther->labTrans->Anamnesa,
-                    'BB'               => $labTransOther->labTrans->BB,
-                    'TB'               => $labTransOther->labTrans->TB,
-                    'LP'               => $labTransOther->labTrans->LP,
-                    'TD'               => $labTransOther->labTrans->TD,
-                    'BMI'              => $labTransOther->labTrans->BMI,
-                    'FinalStatement'   => $labTransOther->labTrans->FinalStatement,
-                    'FinalResult'      => $labTransOther->labTrans->FinalResult,
-                    'Status'           => $labTransOther->labTrans->Status,
-                    'CreateDate'       => $labTransOther->labTrans->CreateDate,
-                    'CreateBy'         => $labTransOther->labTrans->CreateBy,
-                    'LastModifiedDate' => $labTransOther->labTrans->LastModifiedDate,
-                    'LastModifiedBy'   => $labTransOther->labTrans->LastModifiedBy,
-                    'gcrecord'         => $labTransOther->labTrans->gcrecord,
-                ] : null,
+                // 'LabTrans' => $labTransOther->labTrans ? [
+                //     'LabNumber'        => $labTransOther->labTrans->LabNumber,
+                //     'LabTest'          => $labTransOther->labTrans->LabTest,
+                //     'TransDate'        => $labTransOther->labTrans->TransDate,
+                //     'DoctorReferral'   => $labTransOther->labTrans->DoctorReferral,
+                //     'PatientID'        => $labTransOther->labTrans->PatientID,
+                //     'Age'              => $labTransOther->labTrans->Age,
+                //     'Anamnesa'         => $labTransOther->labTrans->Anamnesa,
+                //     'BB'               => $labTransOther->labTrans->BB,
+                //     'TB'               => $labTransOther->labTrans->TB,
+                //     'LP'               => $labTransOther->labTrans->LP,
+                //     'TD'               => $labTransOther->labTrans->TD,
+                //     'BMI'              => $labTransOther->labTrans->BMI,
+                //     'FinalStatement'   => $labTransOther->labTrans->FinalStatement,
+                //     'FinalResult'      => $labTransOther->labTrans->FinalResult,
+                //     'Status'           => $labTransOther->labTrans->Status,
+                //     'CreateDate'       => $labTransOther->labTrans->CreateDate,
+                //     'CreateBy'         => $labTransOther->labTrans->CreateBy,
+                //     'LastModifiedDate' => $labTransOther->labTrans->LastModifiedDate,
+                //     'LastModifiedBy'   => $labTransOther->labTrans->LastModifiedBy,
+                //     'gcrecord'         => $labTransOther->labTrans->gcrecord,
+                // ] : null,
 
-                'SupportServiceID' => $labTransOther->SupportServiceID,
-                'SupportService' => $labTransOther->supportService ? [
-                    'SupportServiceCode' => $labTransOther->supportService->SupportServiceCode,
-                    'SupportServiceName' => $labTransOther->supportService->SupportServiceName,
-                    'CreateDate' => $labTransOther->supportService->CreateDate,
-                    'CreateBy' => $labTransOther->supportService->CreateBy,
-                    'LastModifiedDate' => $labTransOther->supportService->LastModifiedDate,
-                    'LastModifiedBy' => $labTransOther->supportService->LastModifiedBy,
-                ] : null,
-
+                
             ];
         });
 
@@ -133,14 +134,11 @@ class LabTransOtherController extends Controller
  *         required=true,
  *         @OA\JsonContent(
  *             type="object",
+  *            @OA\Property(property="LabTransID", type="integer"),
+ *             @OA\Property(property="SupportServiceID", type="integer"),
  *             @OA\Property(property="SupportServiceNotes", type="string"),
- *             @OA\Property(property="CreateDate", type="string", format="date"),
- *             @OA\Property(property="CreateBy", type="string"),
  *             @OA\Property(property="LastModifiedDate", type="string", format="date"),
  *             @OA\Property(property="LastModifiedBy", type="string"),
- *             @OA\Property(property="LabTransID", type="integer"),
- *             @OA\Property(property="SupportServiceID", type="integer"),
- *             @OA\Property(property="gcrecord", type="integer")
  *         )
  *     ),
  *     @OA\Response(
@@ -166,21 +164,36 @@ public function update(Request $request, $ID) // Gunakan $ID (huruf besar)
     // Validasi semua field yang bisa di-update
     $validatedData = $request->validate([
         'SupportServiceNotes' => 'nullable|string',
-        'CreateDate' => 'nullable|date',
-        'CreateBy' => 'nullable|string',
-        'LastModifiedDate' => 'nullable|date',
+        // 'CreateDate' => 'nullable|date',
+        // 'CreateBy' => 'nullable|string',
+        // 'LastModifiedDate' => 'nullable|date',
         'LastModifiedBy' => 'nullable|string',
         'LabTransID' => 'nullable|integer|exists:Lab_Trans,ID',
         'SupportServiceID' => 'nullable|integer|exists:Support_Service,ID',
-        'gcrecord' => 'nullable|integer'
+        // 'gcrecord' => 'nullable|integer'
     ]);
-
+    
+    $validated['LastModifiedDate'] = now();
     // Update data
-    $labTransOther->update($validatedData);
+    date_default_timezone_set('Asia/Jakarta');
+    $validatedData['LastModifiedDate'] = now()->format('Y-m-d H:i:s');
 
     return response()->json([
-        'message' => 'Data updated successfully',
-        'data' => $labTransOther
+        'ID' => $labTransOther->ID,
+        'LabTransID' => $labTransOther->LabTransID,
+        'SupportServiceID' => $labTransOther->SupportServiceID,
+        'SupportService' => $labTransOther->supportService ? [
+            'SupportServiceCode' => $labTransOther->supportService->SupportServiceCode,
+            'SupportServiceName' => $labTransOther->supportService->SupportServiceName,
+        ] : null,
+    
+        'SupportServiceNotes' => $labTransOther->SupportServiceNotes,
+        // 'CreateDate' => $labTransOther->CreateDate,
+        // 'CreateBy' => $labTransOther->CreateBy,
+        'LastModifiedDate' => $labTransOther->LastModifiedDate,
+        'LastModifiedBy' => $labTransOther->LastModifiedBy, 
     ], 200);
+    
+    
 }
 }

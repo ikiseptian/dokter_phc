@@ -11,97 +11,67 @@ use OpenApi\Annotations as OA;
 class LabTransDetailController extends Controller
 {
     /**
- * @OA\Get(
- *     path="/api/labtransdetail",
- *     tags={"Lab Detail"},
- *     summary="Get all Lab Trans with a single search parameter",
- *     @OA\Parameter(
- *         name="search",
- *         in="query",
- *         required=false,
- *         @OA\Schema(type="string"),
- *         description="Search across multiple fields"
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Filtered list of Lab Trans",
- *         @OA\JsonContent(
- *             type="array",
- *             @OA\Items(ref="#/components/schemas/LabTransDetail")
- *         )
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Data not found"
- *     )
- * )
- */
+     * @OA\Get(
+     *     path="/api/labtransdetail",
+     *     tags={"Lab Detail"},
+     *     summary="Get all Lab Trans with a single search parameter",
+     *     @OA\Parameter(
+     *         name="search",
+     *         in="query",
+     *         required=false,
+     *         @OA\Schema(type="string"),
+     *         description="Search across multiple fields"
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Filtered list of Lab Trans",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(ref="#/components/schemas/LabTransDetail")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Data not found"
+     *     )
+     * )
+     */
 
- public function index(Request $request)
- {
-     $query = LabTransDetail::with(['labTrans', 'itemTest'])
-         ->where('gcrecord', 0); // Hanya mengambil data yang tidak dihapus
- 
-     if ($request->has('search')) {
-         $search = $request->search;
-         $query->where(function ($q) use ($search) {
-             $q->where('ResultValue', 'like', "%{$search}%")
-               ->orWhere('Unit', 'like', "%{$search}%")
-               ->orWhere('ReferenceValue', 'like', "%{$search}%")
-               ->orWhereHas('labTrans', function ($q) use ($search) {
-                   $q->where('LabNumber', 'like', "%{$search}%");
-               })
-               ->orWhereHas('itemTest', function ($q) use ($search) {
-                   $q->where('ItemTestName', 'like', "%{$search}%");
-               });
-         });
-     }
- 
-     $labTransDetails = $query->get();
- 
-     if ($labTransDetails->isEmpty()) {
-         return response()->json(['message' => 'Data not found'], 404);
-     }
- 
-     
- 
+    public function index(Request $request)
+    {
+        $query = LabTransDetail::with(['labTrans', 'itemTest'])
+            ->where('gcrecord', 0); // Hanya mengambil data yang tidak dihapus
+
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('ResultValue', 'like', "%{$search}%")
+                    ->orWhere('Unit', 'like', "%{$search}%")
+                    ->orWhere('ReferenceValue', 'like', "%{$search}%")
+                    ->orWhereHas('labTrans', function ($q) use ($search) {
+                        $q->where('LabNumber', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('itemTest', function ($q) use ($search) {
+                        $q->where('ItemTestName', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $labTransDetails = $query->get();
+
+        if ($labTransDetails->isEmpty()) {
+            return response()->json(['message' => 'Data not found'], 404);
+        }
+
+
+
 
 
         // Format respons
         $formattedData = $labTransDetails->map(function ($detail) {
             return [
                 'ID' => $detail->ID,
-                'ResultValue' => $detail->ResultValue,
-                'Unit' => $detail->Unit,
-                'ReferenceValue' => $detail->ReferenceValue,
-                'ResultNotes' => $detail->ResultNotes,
-                'CreateDate' => $detail->CreateDate,
-                'CreateDate' => $detail->CreateDate,
-                'gcrecord' => $detail->gcrecord,
-                'LabTransID' => $detail->LabTransId,
-                'labTrans' => $detail->labTrans ? [
-                    'LabNumber'        => $detail->labTrans->LabNumber,
-                    'LabTest'          => $detail->labTrans->LabTest,
-                    'TransDate'        => $detail->labTrans->TransDate,
-                    'DoctorReferral'   => $detail->labTrans->DoctorReferral,
-                    'PatientID'        => $detail->labTrans->PatientID,
-                    'Age'              => $detail->labTrans->Age,
-                    'Anamnesa'         => $detail->labTrans->Anamnesa,
-                    'BB'               => $detail->labTrans->BB,
-                    'TB'               => $detail->labTrans->TB,
-                    'LP'               => $detail->labTrans->LP,
-                    'TD'               => $detail->labTrans->TD,
-                    'BMI'              => $detail->labTrans->BMI,
-                    'FinalStatement'   => $detail->labTrans->FinalStatement,
-                    'FinalResult'      => $detail->labTrans->FinalResult,
-                    'Status'           => $detail->labTrans->Status,
-                    'CreateDate'       => $detail->labTrans->CreateDate,
-                    'CreateBy'         => $detail->labTrans->CreateBy,
-                    'LastModifiedDate' => $detail->labTrans->LastModifiedDate,
-                    'LastModifiedBy'   => $detail->labTrans->LastModifiedBy,
-                    'gcrecord'         => $detail->labTrans->gcrecord,
-                ] : null,
-
+                'LabTransID' => $detail->LabTransID,
                 'ItemTestID' => $detail->ItemTestID,
                 'itemTest' => $detail->itemTest ? [
                     'ItemTestCode'      => $detail->itemTest->ItemTestCode,
@@ -109,12 +79,46 @@ class LabTransDetailController extends Controller
                     'Group'            => $detail->itemTest->Group,
                     'SubGroup'         => $detail->itemTest->SubGroup,
                     'Descriptions'     => $detail->itemTest->Descriptions,
-                    'CreateDate'       => $detail->itemTest->CreateDate,
-                    'CreateBy'         => $detail->itemTest->CreateBy,
-                    'LastModifiedDate' => $detail->itemTest->LastModifiedDate,
-                    'LastModifiedBy'   => $detail->itemTest->LastModifiedBy,
-                    'gcrecord'         => $detail->itemTest->gcrecord,
+                    // 'CreateDate'       => $detail->itemTest->CreateDate,
+                    // 'CreateBy'         => $detail->itemTest->CreateBy,
+                    // 'LastModifiedDate' => $detail->itemTest->LastModifiedDate,
+                    // 'LastModifiedBy'   => $detail->itemTest->LastModifiedBy,
+                    // 'gcrecord'         => $detail->itemTest->gcrecord,
                 ] : null,
+                'ResultValue' => $detail->ResultValue,
+                'Unit' => $detail->Unit,
+                'ReferenceValue' => $detail->ReferenceValue,
+                'ResultNotes' => $detail->ResultNotes,
+                'CreateDate' => $detail->CreateDate,
+                'CreateDate' => $detail->CreateDate,
+                'LastModifiedDate' => $detail->LastModifiedDate,
+                'LastModifiedBy	' => $detail->LastModifiedBy,
+                // 'gcrecord' => $detail->gcrecord,
+                
+                // 'labTrans' => $detail->labTrans ? [
+                //     'LabNumber'        => $detail->labTrans->LabNumber,
+                //     'LabTest'          => $detail->labTrans->LabTest,
+                //     'TransDate'        => $detail->labTrans->TransDate,
+                //     'DoctorReferral'   => $detail->labTrans->DoctorReferral,
+                //     'PatientID'        => $detail->labTrans->PatientID,
+                //     'Age'              => $detail->labTrans->Age,
+                //     'Anamnesa'         => $detail->labTrans->Anamnesa,
+                //     'BB'               => $detail->labTrans->BB,
+                //     'TB'               => $detail->labTrans->TB,
+                //     'LP'               => $detail->labTrans->LP,
+                //     'TD'               => $detail->labTrans->TD,
+                //     'BMI'              => $detail->labTrans->BMI,
+                //     'FinalStatement'   => $detail->labTrans->FinalStatement,
+                //     'FinalResult'      => $detail->labTrans->FinalResult,
+                //     'Status'           => $detail->labTrans->Status,
+                //     'CreateDate'       => $detail->labTrans->CreateDate,
+                //     'CreateBy'         => $detail->labTrans->CreateBy,
+                //     'LastModifiedDate' => $detail->labTrans->LastModifiedDate,
+                //     'LastModifiedBy'   => $detail->labTrans->LastModifiedBy,
+                //     // 'gcrecord'         => $detail->labTrans->gcrecord,
+                // ] : null,
+
+                
 
 
             ];
@@ -140,12 +144,13 @@ class LabTransDetailController extends Controller
      *         required=true,
      *         @OA\JsonContent(
      *             type="object",
+     *             @OA\Property(property="ItemTestID", type="integer", example=5),
+     *             @OA\Property(property="LabTransID", type="integer", example=5),
      *             @OA\Property(property="ResultValue", type="string", example="Positive"),
      *             @OA\Property(property="Unit", type="string", example="mg/dL"),
      *             @OA\Property(property="ReferenceValue", type="string", example="70-110"),
      *             @OA\Property(property="ResultNotes", type="string", example="Normal Range"),
-     *             @OA\Property(property="ItemTestID", type="integer", example=5),
-     *             @OA\Property(property="LabTransID", type="integer", example=5)
+     *             @OA\Property(property="LastModifiedBy", type="string", example="Admin")
      *         )
      *     ),
      *     @OA\Response(
@@ -164,29 +169,52 @@ class LabTransDetailController extends Controller
      * )
      */
     public function update(Request $request, $ID)
-    {
-        $labTransDetail = LabTransDetail::where('ID', $ID)->where('gcrecord', 0)->first();
+{
+    $labTransDetail = LabTransDetail::where('ID', $ID)->where('gcrecord', 0)->first();
 
-        if (!$labTransDetail) {
-            return response()->json(['message' => 'Data not found'], 404);
-        }
-
-        // Validasi input
-        $validatedData = $request->validate([
-            'ResultValue' => 'nullable|string',
-            'Unit' => 'nullable|string',
-            'ReferenceValue' => 'nullable|string',
-            'ResultNotes' => 'nullable|string',
-            'ItemTestID' => 'nullable|integer|exists:Item_Test,ID',
-            'LabTransID' => 'nullable|integer|exists:Lab_Trans,ID'
-        ]);
-
-        // Update data
-        $labTransDetail->update($validatedData);
-
-        return response()->json([
-            'message' => 'Data updated successfully',
-            'data' => $labTransDetail
-        ], 200);
+    if (!$labTransDetail) {
+        return response()->json(['message' => 'Data not found'], 404);
     }
+
+    // Validasi input
+    $validatedData = $request->validate([
+        'ResultValue' => 'nullable|string',
+        'Unit' => 'nullable|string',
+        'ReferenceValue' => 'nullable|string',
+        'ResultNotes' => 'nullable|string',
+        'LastModifiedDate' => 'nullable|date',
+        'LastModifiedBy' => 'nullable|string',
+        'ItemTestID' => 'nullable|integer|exists:Item_Test,ID',
+        'LabTransID' => 'nullable|integer|exists:Lab_Trans,ID'
+    ]);
+
+    // Update LastModifiedDate otomatis ke waktu sekarang
+    date_default_timezone_set('Asia/Jakarta');
+    $validatedData['LastModifiedDate'] = now()->format('Y-m-d H:i:s');
+
+    // Update data
+    $labTransDetail->update($validatedData);
+
+    // Return response yang sesuai dengan format GET
+    return response()->json([
+        'ID' => $labTransDetail->ID,
+        'LabTransID' => $labTransDetail->LabTransID,
+        'ItemTestID' => $labTransDetail->ItemTestID,
+        'itemTest' => $labTransDetail->itemTest ? [
+            'ItemTestCode'      => $labTransDetail->itemTest->ItemTestCode,
+            'ItemTestName'      => $labTransDetail->itemTest->ItemTestName,
+            'Group'             => $labTransDetail->itemTest->Group,
+            'SubGroup'          => $labTransDetail->itemTest->SubGroup,
+            'Descriptions'      => $labTransDetail->itemTest->Descriptions,
+        ] : null,
+        'ResultValue' => $labTransDetail->ResultValue,
+        'Unit' => $labTransDetail->Unit,
+        'ReferenceValue' => $labTransDetail->ReferenceValue,
+        'ResultNotes' => $labTransDetail->ResultNotes,
+        // 'CreateDate' => $labTransDetail->CreateDate,
+        'LastModifiedDate' => $labTransDetail->LastModifiedDate,
+        'LastModifiedBy' => $labTransDetail->LastModifiedBy,
+    ], 200);
+}
+
 }
