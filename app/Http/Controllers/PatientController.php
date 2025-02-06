@@ -10,50 +10,83 @@ use Carbon\Carbon;
 class PatientController extends Controller
 {
     /**
-     * @OA\Get(
-     *     path="/api/pasien",
-     *     summary="Ambil semua data pasien",
-     *     description="Mengambil daftar semua pasien yang terdaftar. Bisa menggunakan parameter pencarian.",
-     *     tags={"Pasien"},
-     *     @OA\Parameter(
-     *         name="search",
-     *         in="query",
-     *         description="Parameter pencarian untuk mencocokkan data pasien berdasarkan NIK, PatientID_Provider, atau kolom lain.",
-     *         required=false,
-     *         @OA\Schema(type="string", example="John")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Daftar pasien berhasil diambil",
-     *         @OA\JsonContent(
-     *             type="array",
-     *             @OA\Items(ref="#/components/schemas/Patient")
-     *         )
-     *     )
-     * )
-     */
-    public function index(Request $request)
+ * @OA\Get(
+ *     path="/api/pasien",
+ *     summary="Ambil semua data pasien",
+ *     description="Mengambil daftar semua pasien yang terdaftar. Bisa menggunakan parameter pencarian berdasarkan ID atau teks.",
+ *     tags={"Pasien"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="query",
+ *         description="Cari berdasarkan ID pasien yang spesifik (integer match).",
+ *         required=false,
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Parameter(
+ *         name="query",
+ *         in="query",
+ *         description="Cari berdasarkan NIK, FullName, Phone, atau Address dengan pencarian LIKE.",
+ *         required=false,
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Daftar pasien berhasil diambil",
+ *         @OA\JsonContent(
+ *             type="array",
+ *             @OA\Items(ref="#/components/schemas/Patient")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Data tidak ditemukan"
+ *     )
+ * )
+ */
+public function index(Request $request)
 {
-    $patient = Patient::whereNull('gcrecord')->orWhere('gcrecord', 0); // Filter gcrecord diterapkan di awal
+    $id = $request->query('id');
+    $query = $request->query('query');
 
-    if ($request->has('search') && !empty($request->search)) {
-        $search = $request->search;
+    $patients = Patient::where('gcrecord', 0) // Pastikan hanya mengambil data dengan gcrecord = 0
+    ->when($id, function ($q) use ($id) {
+        $q->where('ID', $id); // Filter berdasarkan ID (gunakan "=")
+    })
+    ->when(!$id && $query, function ($q) use ($query) {
+        if (stripos($query, 'urine') !== false) {
+            // Jika query berisi "urine", filter hanya alamat atau nama yang mengandung "urine"
+            $q->where('Address', 'LIKE', '%urine%')
+              ->orWhere('FullName', 'LIKE', '%urine%');
+        } else {
+            // Jika query bukan "urine", cari di beberapa kolom menggunakan LIKE
+            $q->where(function ($subQ) use ($query) {
+                $subQ->where('NIK', 'LIKE', "%{$query}%")
+                     ->orWhere('PatientID_Provider', 'LIKE', "%{$query}%")
+                     ->orWhere('FullName', 'LIKE', "%{$query}%")
+                     ->orWhere('Sex', 'LIKE', "%{$query}%")
+                     ->orWhere('BirthDate', 'LIKE', "%{$query}%")
+                     ->orWhere('Address', 'LIKE', "%{$query}%")
+                     ->orWhere('Phone', 'LIKE', "%{$query}%")
+                     ->orWhere('CreateBy', 'LIKE', "%{$query}%")
+                     ->orWhere('LastModifiedBy', 'LIKE', "%{$query}%");
+            });
+        }
+    })
+    ->get();
 
-        $patient->where(function ($q) use ($search) {
-            $q->where('NIK', 'LIKE', "%{$search}%")
-                ->orWhere('PatientID_Provider', 'LIKE', "%{$search}%")
-                ->orWhere('FullName', 'LIKE', "%{$search}%")
-                ->orWhere('Sex', 'LIKE', "%{$search}%")
-                ->orWhere('BirthDate', 'LIKE', "%{$search}%")
-                ->orWhere('Address', 'LIKE', "%{$search}%")
-                ->orWhere('Phone', 'LIKE', "%{$search}%")
-                ->orWhere('CreateBy', 'LIKE', "%{$search}%")
-                ->orWhere('LastModifiedBy', 'LIKE', "%{$search}%");
-        });
+    // Hitung total data setelah filter
+    $total = $patients->count();
+
+    if ($patients->isEmpty()) {
+        return response()->json([
+            'message' => 'Data tidak ditemukan',
+            'total' => 0,
+            'data' => []
+        ], 404);
     }
 
-    // Ambil data dengan memastikan CreateDate di-cast sebagai datetime
-    $formattedData = $patient->get()->map(function ($patient) {
+    // Format respons dengan memastikan CreateDate di-cast sebagai datetime
+    $formattedData = $patients->map(function ($patient) {
         return [
             'ID' => $patient->ID,
             'NIK' => $patient->NIK,
@@ -69,8 +102,13 @@ class PatientController extends Controller
         ];
     });
 
-    return response()->json($formattedData, 200);
+    return response()->json([
+        'message' => 'Data berhasil diambil',
+        'totaldata' => $total,
+        'data' => $formattedData
+    ], 200);
 }
+
 
 
     /**

@@ -9,17 +9,24 @@ use OpenApi\Annotations as OA;
 
 class LabTransOtherController extends Controller
 {
-    /**
+  /**
  * @OA\Get(
  *     path="/api/labtransother",
  *     summary="Get all LabTransOthers with optional search",
  *     tags={"LabTransOther"},
  *     @OA\Parameter(
- *         name="search",
+ *         name="id",
+ *         in="query",
+ *         required=false,
+ *         @OA\Schema(type="integer"),
+ *         description="Search by exact ID (integer match)"
+ *     ),
+ *     @OA\Parameter(
+ *         name="query",
  *         in="query",
  *         required=false,
  *         @OA\Schema(type="string"),
- *         description="Search across multiple fields (LabNumber, SupportServiceNotes, etc.)"
+ *         description="Search by text query (LIKE match), filtering for 'urine' if provided"
  *     ),
  *     @OA\Response(
  *         response=200,
@@ -36,86 +43,151 @@ class LabTransOtherController extends Controller
  * )
  */
 
- public function index(Request $request)
- {
-     $query = LabTransOther::with(['labTrans', 'supportService'])
-         ->where('gcrecord', 0);
- 
-     if ($request->has('search')) {
-         $search = $request->search;
-         $query->where(function ($q) use ($search) {
-             $q->where('SupportServiceNotes', 'like', "%{$search}%")
-               ->orWhereHas('labTrans', function ($q) use ($search) {
-                   $q->where('LabNumber', 'like', "%{$search}%")
-                     ->orWhere('DoctorReferral', 'like', "%{$search}%");
-               })
-               ->orWhereHas('supportService', function ($q) use ($search) {
-                   $q->where('SupportServiceCode', 'like', "%{$search}%")
-                     ->orWhere('SupportServiceName', 'like', "%{$search}%");
-               });
-         });
-     }
- 
-     $labTransOthers = $query->get();
- 
-     if ($labTransOthers->isEmpty()) {
-         return response()->json(['message' => 'Data not found'], 404);
-     }
- 
-    
- 
+public function index(Request $request)
+{
+    $id = $request->query('id');
+    $query = $request->query('query');
 
-        // Format ulang data untuk respons
-        $formattedData = $labTransOthers->map(function ($labTransOther) {
-            return [
-                'ID' => $labTransOther->ID,
-                'LabTransID' => $labTransOther->LabTransID,
-                'SupportServiceID' => $labTransOther->SupportServiceID,
-                'SupportService' => $labTransOther->supportService ? [
-                    'SupportServiceCode' => $labTransOther->supportService->SupportServiceCode,
-                    'SupportServiceName' => $labTransOther->supportService->SupportServiceName,
-                    // 'CreateDate' => $labTransOther->supportService->CreateDate,
-                    // 'CreateBy' => $labTransOther->supportService->CreateBy,
-                    // 'LastModifiedDate' => $labTransOther->supportService->LastModifiedDate,
-                    // 'LastModifiedBy' => $labTransOther->supportService->LastModifiedBy,
-                ] : null,
+    $labTransOthers = LabTransOther::with([
+        'labTrans' => function ($q) {
+            $q->where('gcrecord', 0); // Pastikan labTrans juga tidak memiliki gcrecord
+        },
+        'supportService' => function ($q) {
+            $q->where('gcrecord', 0); // Pastikan supportService juga tidak memiliki gcrecord
+        }
+    ])
+    ->where('gcrecord', 0) // Pastikan data utama juga hanya mengambil gcrecord = 0
+    ->when($id, function ($q) use ($id) {
+        $q->where('ID', $id); // Filter berdasarkan ID (gunakan "=")
+    })
+    ->when(!$id && $query, function ($q) use ($query) {
+        if (stripos($query, 'urine') !== false) {
+            // Jika query berisi "urine", filter hanya data yang mengandung "urine" di SupportServiceNotes atau SupportServiceName
+            $q->where('SupportServiceNotes', 'LIKE', '%urine%')
+              ->orWhereHas('supportService', function ($subQuery) {
+                  $subQuery->where('SupportServiceName', 'LIKE', '%urine%');
+              });
+        } else {
+            // Jika query bukan "urine", cari di beberapa kolom menggunakan LIKE
+            $q->where('SupportServiceNotes', 'LIKE', "%{$query}%")
+              ->orWhereHas('labTrans', function ($subQuery) use ($query) {
+                  $subQuery->where('LabNumber', 'LIKE', "%{$query}%")
+                           ->orWhere('DoctorReferral', 'LIKE', "%{$query}%");
+              })
+              ->orWhereHas('supportService', function ($subQuery) use ($query) {
+                  $subQuery->where('SupportServiceCode', 'LIKE', "%{$query}%")
+                           ->orWhere('SupportServiceName', 'LIKE', "%{$query}%");
+              });
+        }
+    })
+    ->get();
 
-                'SupportServiceNotes' => $labTransOther->SupportServiceNotes,
-                'CreateDate' => $labTransOther->CreateDate,
-                'CreateBy' => $labTransOther->CreateBy,
-                'LastModifiedDate' => $labTransOther->LastModifiedDate,
-                'LastModifiedBy	' => $labTransOther->LastModifiedBy,
-                // 'gcrecord' => $labTransOther->gcrecord,
+    // Hitung total data setelah filter
+    $total = $labTransOthers->count();
 
-                // 'LabTrans' => $labTransOther->labTrans ? [
-                //     'LabNumber'        => $labTransOther->labTrans->LabNumber,
-                //     'LabTest'          => $labTransOther->labTrans->LabTest,
-                //     'TransDate'        => $labTransOther->labTrans->TransDate,
-                //     'DoctorReferral'   => $labTransOther->labTrans->DoctorReferral,
-                //     'PatientID'        => $labTransOther->labTrans->PatientID,
-                //     'Age'              => $labTransOther->labTrans->Age,
-                //     'Anamnesa'         => $labTransOther->labTrans->Anamnesa,
-                //     'BB'               => $labTransOther->labTrans->BB,
-                //     'TB'               => $labTransOther->labTrans->TB,
-                //     'LP'               => $labTransOther->labTrans->LP,
-                //     'TD'               => $labTransOther->labTrans->TD,
-                //     'BMI'              => $labTransOther->labTrans->BMI,
-                //     'FinalStatement'   => $labTransOther->labTrans->FinalStatement,
-                //     'FinalResult'      => $labTransOther->labTrans->FinalResult,
-                //     'Status'           => $labTransOther->labTrans->Status,
-                //     'CreateDate'       => $labTransOther->labTrans->CreateDate,
-                //     'CreateBy'         => $labTransOther->labTrans->CreateBy,
-                //     'LastModifiedDate' => $labTransOther->labTrans->LastModifiedDate,
-                //     'LastModifiedBy'   => $labTransOther->labTrans->LastModifiedBy,
-                //     'gcrecord'         => $labTransOther->labTrans->gcrecord,
-                // ] : null,
-
-                
-            ];
-        });
-
-        return response()->json($formattedData, 200);
+    if ($labTransOthers->isEmpty()) {
+        return response()->json([
+            'message' => 'Data not found',
+            'total' => 0,
+            'data' => []
+        ], 404);
     }
+
+    // Format ulang data untuk respons
+    $formattedData = $labTransOthers->map(function ($labTransOther) {
+        return [
+            'ID' => $labTransOther->ID,
+            'LabTransID' => $labTransOther->LabTransID,
+            'SupportServiceID' => $labTransOther->SupportServiceID,
+            'SupportService' => $labTransOther->supportService ? [
+                'SupportServiceCode' => $labTransOther->supportService->SupportServiceCode,
+                'SupportServiceName' => $labTransOther->supportService->SupportServiceName,
+            ] : null,
+            'SupportServiceNotes' => $labTransOther->SupportServiceNotes,
+            'CreateDate' => $labTransOther->CreateDate,
+            'CreateBy' => $labTransOther->CreateBy,
+            'LastModifiedDate' => $labTransOther->LastModifiedDate,
+            'LastModifiedBy' => $labTransOther->LastModifiedBy,
+        ];
+    });
+
+    return response()->json([
+        'message' => 'Data berhasil diambil',
+        'totaldata' => $total,
+        'data' => $formattedData
+    ], 200);
+}
+
+    /**
+ * @OA\Post(
+ *     path="/api/labtransother",
+ *     tags={"LabTransOther"},
+ *     summary="Create a new LabTransOther",
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="LabTransID", type="integer", example=5),
+ *             @OA\Property(property="SupportServiceID", type="integer", example=10),
+ *             @OA\Property(property="SupportServiceNotes", type="string", example="MRI Scan Required"),
+ *             @OA\Property(property="CreateBy", type="string", example="Admin")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=201,
+ *         description="Data berhasil disimpan",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Data berhasil disimpan"),
+ *             @OA\Property(property="data", ref="#/components/schemas/LabTransOther")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Bad Request"
+ *     )
+ * )
+ */
+public function store(Request $request)
+{
+    // Validasi input
+    $validatedData = $request->validate([
+        'LabTransID' => 'required|integer|exists:Lab_Trans,ID',
+        'SupportServiceID' => 'required|integer|exists:Support_Service,ID',
+        'SupportServiceNotes' => 'nullable|string',
+        'CreateBy' => 'nullable|string|max:20',
+    ]);
+
+    // Tambahkan CreateDate secara otomatis
+    date_default_timezone_set('Asia/Jakarta');
+    $validatedData['CreateDate'] = now()->format('Y-m-d H:i:s');
+    $validatedData['gcrecord'] = false; // Set default gcrecord ke false
+
+    // Simpan data ke tabel LabTransOther
+    $labTransOther = LabTransOther::create($validatedData);
+
+    // Format response sesuai dengan GET
+    $formattedData = [
+        'ID' => $labTransOther->ID,
+        'LabTransID' => $labTransOther->LabTransID,
+        'SupportServiceID' => $labTransOther->SupportServiceID,
+        'SupportService' => $labTransOther->supportService ? [
+            'SupportServiceCode' => $labTransOther->supportService->SupportServiceCode,
+            'SupportServiceName' => $labTransOther->supportService->SupportServiceName,
+        ] : null,
+        'SupportServiceNotes' => $labTransOther->SupportServiceNotes,
+        'CreateDate' => $labTransOther->CreateDate,
+        'CreateBy' => $labTransOther->CreateBy,
+        // 'LastModifiedDate' => $labTransOther->LastModifiedDate,
+        // 'LastModifiedBy' => $labTransOther->LastModifiedBy,
+    ];
+
+    return response()->json([
+        'message' => 'Data berhasil disimpan',
+        'data' => $formattedData
+    ], 201);
+}
+
 
 
    /**
@@ -137,7 +209,6 @@ class LabTransOtherController extends Controller
   *            @OA\Property(property="LabTransID", type="integer"),
  *             @OA\Property(property="SupportServiceID", type="integer"),
  *             @OA\Property(property="SupportServiceNotes", type="string"),
- *             @OA\Property(property="LastModifiedDate", type="string", format="date"),
  *             @OA\Property(property="LastModifiedBy", type="string"),
  *         )
  *     ),
@@ -152,48 +223,46 @@ class LabTransOtherController extends Controller
  *     )
  * )
  */
-public function update(Request $request, $ID) // Gunakan $ID (huruf besar)
-{
-    // Cari data berdasarkan ID dan pastikan gcrecord = 0
-    $labTransOther = LabTransOther::where('ID', $ID)->where('gcrecord', 0)->first();
 
-    if (!$labTransOther) {
-        return response()->json(['message' => 'Data not found'], 404);
-    }
-
-    // Validasi semua field yang bisa di-update
-    $validatedData = $request->validate([
-        'SupportServiceNotes' => 'nullable|string',
-        // 'CreateDate' => 'nullable|date',
-        // 'CreateBy' => 'nullable|string',
-        // 'LastModifiedDate' => 'nullable|date',
-        'LastModifiedBy' => 'nullable|string',
-        'LabTransID' => 'nullable|integer|exists:Lab_Trans,ID',
-        'SupportServiceID' => 'nullable|integer|exists:Support_Service,ID',
-        // 'gcrecord' => 'nullable|integer'
-    ]);
-    
-    $validated['LastModifiedDate'] = now();
-    // Update data
-    date_default_timezone_set('Asia/Jakarta');
-    $validatedData['LastModifiedDate'] = now()->format('Y-m-d H:i:s');
-
-    return response()->json([
-        'ID' => $labTransOther->ID,
-        'LabTransID' => $labTransOther->LabTransID,
-        'SupportServiceID' => $labTransOther->SupportServiceID,
-        'SupportService' => $labTransOther->supportService ? [
-            'SupportServiceCode' => $labTransOther->supportService->SupportServiceCode,
-            'SupportServiceName' => $labTransOther->supportService->SupportServiceName,
-        ] : null,
-    
-        'SupportServiceNotes' => $labTransOther->SupportServiceNotes,
-        // 'CreateDate' => $labTransOther->CreateDate,
-        // 'CreateBy' => $labTransOther->CreateBy,
-        'LastModifiedDate' => $labTransOther->LastModifiedDate,
-        'LastModifiedBy' => $labTransOther->LastModifiedBy, 
-    ], 200);
-    
-    
-}
-}
+ 
+ public function update(Request $request, $ID)
+ {
+     // Cari data berdasarkan ID dan pastikan gcrecord = 0
+     $labTransOther = LabTransOther::where('ID', $ID)->where('gcrecord', 0)->first();
+ 
+     if (!$labTransOther) {
+         return response()->json(['message' => 'Data not found'], 404);
+     }
+ 
+     // Validasi semua field yang bisa di-update
+     $validatedData = $request->validate([
+         'SupportServiceNotes' => 'nullable|string',
+         'LastModifiedBy' => 'nullable|string',
+         'LabTransID' => 'nullable|integer|exists:Lab_Trans,ID',
+         'SupportServiceID' => 'nullable|integer|exists:Support_Service,ID',
+     ]);
+     
+     // Set timezone ke Asia/Jakarta
+     date_default_timezone_set('Asia/Jakarta');
+ 
+     // Update LastModifiedDate otomatis ke waktu sekarang
+     $validatedData['LastModifiedDate'] = now()->format('Y-m-d H:i:s');
+ 
+     // Update data
+     $labTransOther->update($validatedData);
+ 
+     // Format response sesuai dengan GET
+     return response()->json([
+         'ID' => $labTransOther->ID,
+         'LabTransID' => $labTransOther->LabTransID,
+         'SupportServiceID' => $labTransOther->SupportServiceID,
+         'SupportService' => $labTransOther->supportService ? [
+             'SupportServiceCode' => $labTransOther->supportService->SupportServiceCode,
+             'SupportServiceName' => $labTransOther->supportService->SupportServiceName,
+         ] : null,
+         'SupportServiceNotes' => $labTransOther->SupportServiceNotes,
+         'LastModifiedDate' => $labTransOther->LastModifiedDate,
+         'LastModifiedBy' => $labTransOther->LastModifiedBy, 
+     ], 200);
+ }
+} 

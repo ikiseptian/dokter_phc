@@ -12,61 +12,76 @@ use OpenApi\Annotations as OA;
 class LabTransController extends Controller
 {
     /**
-     * @OA\Get(
-     *     path="/api/labtrans",
-     *     tags={"Lab Trans"},
-     *     summary="Search Lab Trans by various fields",
-     *     @OA\Parameter(
-     *         name="q",
-     *         in="query",
-     *         description="Search query that will be applied to multiple fields (e.g., LabNumber, LabTest, PatientID)",
-     *         required=false,
-     *         @OA\Schema(type="string")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="A list of Lab Trans",
-     *         @OA\JsonContent(
-     *             type="array",
-     *             @OA\Items(ref="#/components/schemas/LabTrans")
-     *         )
-     *     )
-     * )
-     */
-
-
-     public function index(Request $request)
+ * @OA\Get(
+ *     path="/api/labtrans",
+ *     tags={"Lab Trans"},
+ *     summary="Search Lab Trans by ID or query (including urine filter)",
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="query",
+ *         description="Search by exact ID (integer match)",
+ *         required=false,
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Parameter(
+ *         name="query",
+ *         in="query",
+ *         description="Search by text query (LIKE match), filtering for 'urine' if provided",
+ *         required=false,
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="A list of Lab Trans (filtered by ID or query)",
+ *         @OA\JsonContent(
+ *             type="array",
+ *             @OA\Items(ref="#/components/schemas/LabTrans")
+ *         )
+ *     )
+ * )
+ */
+public function index(Request $request)
 {
-    // Get the search query (if provided)
-    $search = $request->query('q');
+    $id = $request->query('id');
+    $query = $request->query('query');
 
-    // Query LabTrans dengan filter gcrecord = 0
     $labTrans = Lab_Trans::with([
-        'patient' => function ($query) {
-            $query->where('gcrecord', 0);
+        'patient' => function ($q) {
+            $q->where('gcrecord', 0);
         },
-        'labTransDetails' => function ($query) {
-            $query->where('gcrecord', 0)->with('itemTest');
+        'labTransDetails' => function ($q) {
+            $q->where('gcrecord', 0)->with('itemTest');
         },
-        'labTransOthers' => function ($query) {
-            $query->where('gcrecord', 0)->with('supportService');
+        'labTransOthers' => function ($q) {
+            $q->where('gcrecord', 0)->with('supportService');
         }
     ])
         ->where('gcrecord', 0)
-        ->when($search, function ($query, $search) {
-            return $query->where(function ($query) use ($search) {
-                $query->where('LabNumber', 'like', '%' . $search . '%')
-                    ->orWhere('LabTest', 'like', '%' . $search . '%')
-                    ->orWhere('TransDate', 'like', '%' . $search . '%')
-                    ->orWhereHas('patient', function ($query) use ($search) {
-                        $query->where('FullName', 'like', '%' . $search . '%')
-                            ->orWhere('NIK', 'like', '%' . $search . '%');
+        ->when($id, function ($q) use ($id) {
+            $q->where('ID', $id); // Filter berdasarkan ID (gunakan "=")
+        })
+        ->when(!$id && $query, function ($q) use ($query) {
+            if (stripos($query, 'urine') !== false) {
+                // Jika query berisi "urine", filter hanya deskripsi yang mengandung "urine"
+                $q->whereHas('labTransDetails.itemTest', function ($subQuery) {
+                    $subQuery->where('Descriptions', 'LIKE', '%urine%');
+                });
+            } else {
+                // Jika query bukan "urine", cari di beberapa kolom menggunakan LIKE
+                $q->where('LabNumber', 'LIKE', "%{$query}%")
+                    ->orWhere('LabTest', 'LIKE', "%{$query}%")
+                    ->orWhereHas('patient', function ($subQuery) use ($query) {
+                        $subQuery->where('FullName', 'LIKE', "%{$query}%")
+                            ->orWhere('NIK', 'LIKE', "%{$query}%");
                     });
-            });
+            }
         })
         ->get();
 
-    // Format the response
+    // Hitung total data setelah filter
+    $total = $labTrans->count();
+
+    // Format data yang akan dikirimkan
     $formattedData = $labTrans->map(function ($labTrans) {
         // Hitung umur berdasarkan BirthDate
         $age = null;
@@ -82,28 +97,26 @@ class LabTransController extends Controller
             'LabTest' => $labTrans->LabTest,
             'TransDate' => $labTrans->TransDate,
             'DoctorReferral' => $labTrans->DoctorReferral,
-            'Age' => $age, // Umur otomatis dihitung
+            'Age' => $age,
             'Anamnesa' => $labTrans->Anamnesa,
             'BB' => $labTrans->BB,
             'TB' => $labTrans->TB,
             'LP' => $labTrans->LP,
             'TD' => $labTrans->TD,
             'BMI' => $labTrans->BMI,
-            'PatientID' => $labTrans->PatientID,
+            'NIK' => $labTrans->patient->NIK ?? null,
             'patient' => $labTrans->patient ? [
-                [
-                    'ID'                  => $labTrans->patient->ID ?? null,
-                    'NIK'                 => $labTrans->patient->NIK ?? null,
-                    'PatientID_Provider'  => $labTrans->patient->PatientID_Provider ?? null,
-                    'FullName'            => $labTrans->patient->FullName ?? null,
-                    'Sex'                 => $labTrans->patient->Sex ?? null,
-                    'BirthDate'           => $labTrans->patient->BirthDate ?? null,
-                    'Address'             => $labTrans->patient->Address ?? null,
-                    'Phone'               => $labTrans->patient->Phone ?? null,
-                    'CreateBy'            => $labTrans->patient->CreateBy ?? null,
-                    'LastModifiedBy'      => $labTrans->patient->LastModifiedBy ?? null,
-                ]
-            ] : [],
+                'ID'                  => $labTrans->patient->ID ?? null,
+                'NIK'                 => $labTrans->patient->NIK ?? null,
+                'PatientID_Provider'  => $labTrans->patient->PatientID_Provider ?? null,
+                'FullName'            => $labTrans->patient->FullName ?? null,
+                'Sex'                 => $labTrans->patient->Sex ?? null,
+                'BirthDate'           => $labTrans->patient->BirthDate ?? null,
+                'Address'             => $labTrans->patient->Address ?? null,
+                'Phone'               => $labTrans->patient->Phone ?? null,
+                'CreateBy'            => $labTrans->patient->CreateBy ?? null,
+                'LastModifiedBy'      => $labTrans->patient->LastModifiedBy ?? null,
+            ] : null,
             'Lab_Trans_Details' => $labTrans->labTransDetails->map(function ($detail) {
                 return [
                     'ID'              => $detail->ID, 
@@ -119,7 +132,6 @@ class LabTransController extends Controller
                     'ResultNotes'     => $detail->ResultNotes,
                 ];
             }),
-
             'Lab_Trans_Others' => $labTrans->labTransOthers->map(function ($other) {
                 return [
                     'ID'                   => $other->ID, 
@@ -134,6 +146,7 @@ class LabTransController extends Controller
 
     return response()->json([
         'message' => 'Data berhasil diambil',
+        'totaldata' => $total,
         'data' => $formattedData
     ], 200);
 }
@@ -141,82 +154,110 @@ class LabTransController extends Controller
 
 
 
+
     /**
-     * @OA\Post(
-     *     path="/api/labtrans",
-     *     summary="Create a new Lab Transaction",
-     *     tags={"Lab Trans"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"LabNumber", "LabTest", "TransDate", "PatientID"},
-     *             @OA\Property(property="LabNumber", type="string", example="LAB-12345"),
-     *             @OA\Property(property="LabTest", type="string", example="Blood Test"),
-     *             @OA\Property(property="TransDate", type="string", format="date", example="2024-09-06"),
-     *             @OA\Property(property="DoctorReferral", type="string", example="Dr. John Doe"),
-     *             @OA\Property(property="PatientID", type="integer", example=1),
-     *             @OA\Property(property="Anamnesa", type="string", example="Pasien mengalami demam tinggi"),
-     *             @OA\Property(property="BB", type="string", example="70"),
-     *             @OA\Property(property="TB", type="string", example="170"),
-     *             @OA\Property(property="LP", type="string", example="80"),
-     *             @OA\Property(property="TD", type="string", example="120/80"),
-     *             @OA\Property(property="BMI", type="string", example="22.5"),
-     *             @OA\Property(property="FinalStatement", type="string", example="Sehat"),
-     *             @OA\Property(property="FinalResult", type="string", example="Normal"),
-     *             @OA\Property(property="Status", type="string", example="Completed"),
-     *             @OA\Property(property="CreateBy", type="string", example="admin"),
-     *             @OA\Property(
-     *                 property="Lab_Trans_Details",
-     *                 type="array",
-     *                 @OA\Items(
-     *                     @OA\Property(property="ItemTestID", type="integer", example=101),
-     *                     @OA\Property(property="ResultValue", type="string", example="5.4"),
-     *                     @OA\Property(property="Unit", type="string", example="mmol/L"),
-     *                     @OA\Property(property="ReferenceValue", type="string", example="3.9-6.1"),
-     *                     @OA\Property(property="ResultNotes", type="string", example="Normal"),
-     *                     @OA\Property(property="CreateBy", type="string", example="admin"),
-     *                 )
-     *             ),
-     *             @OA\Property(
-     *                 property="Lab_Trans_Others",
-     *                 type="array",
-     *                 @OA\Items(
-     *                     @OA\Property(property="SupportServiceID", type="integer", example=201),
-     *                     @OA\Property(property="SupportServiceNotes", type="string", example="Rontgen dada dilakukan"),
-     *                     @OA\Property(property="CreateBy", type="string", example="admin"),
-     *                 )
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="Data berhasil disimpan",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Data berhasil disimpan"),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="ID", type="integer", example=1),
-     *                 @OA\Property(property="LabNumber", type="string", example="LAB-12345"),
-     *                 @OA\Property(property="LabTest", type="string", example="Blood Test"),
-     *                 @OA\Property(property="TransDate", type="string", format="date", example="2024-09-06"),
-     *                 @OA\Property(property="PatientID", type="integer", example=1)
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=400,
-     *         description="Bad Request"
-     *     )
-     * )
-     */
+ * @OA\Post(
+ *     path="/api/labtrans",
+ *     summary="Create a new Lab Transaction",
+ *     tags={"Lab Trans"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={"LabNumber", "LabTest", "TransDate", "NIK"},
+ *             @OA\Property(property="LabNumber", type="string", example="LAB-12345"),
+ *             @OA\Property(property="LabTest", type="string", example="Blood Test"),
+ *             @OA\Property(property="TransDate", type="string", format="date", example="2024-09-06"),
+ *             @OA\Property(property="DoctorReferral", type="string", example="Dr. John Doe"),
+ *             @OA\Property(property="NIK", type="string", example="1234567890123456"),
+ *             @OA\Property(property="Anamnesa", type="string", example="Pasien mengalami demam tinggi"),
+ *             @OA\Property(property="BB", type="string", example="70"),
+ *             @OA\Property(property="TB", type="string", example="170"),
+ *             @OA\Property(property="LP", type="string", example="80"),
+ *             @OA\Property(property="TD", type="string", example="120/80"),
+ *             @OA\Property(property="BMI", type="string", example="22.5"),
+ *             @OA\Property(property="FinalStatement", type="string", example="Sehat"),
+ *             @OA\Property(property="FinalResult", type="string", example="Normal"),
+ *             @OA\Property(property="Status", type="string", example="Completed"),
+ *             @OA\Property(property="CreateBy", type="string", example="admin"),
+ *             @OA\Property(
+ *                 property="Lab_Trans_Details",
+ *                 type="array",
+ *                 @OA\Items(
+ *                     @OA\Property(property="ItemTestID", type="integer", example=101),
+ *                     @OA\Property(property="ResultValue", type="string", example="5.4"),
+ *                     @OA\Property(property="Unit", type="string", example="mmol/L"),
+ *                     @OA\Property(property="ReferenceValue", type="string", example="3.9-6.1"),
+ *                     @OA\Property(property="ResultNotes", type="string", example="Normal"),
+ *                     @OA\Property(property="CreateBy", type="string", example="admin"),
+ *                 )
+ *             ),
+ *             @OA\Property(
+ *                 property="Lab_Trans_Others",
+ *                 type="array",
+ *                 @OA\Items(
+ *                     @OA\Property(property="SupportServiceID", type="integer", example=201),
+ *                     @OA\Property(property="SupportServiceNotes", type="string", example="Rontgen dada dilakukan"),
+ *                     @OA\Property(property="CreateBy", type="string", example="admin"),
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=201,
+ *         description="Data berhasil disimpan",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Data berhasil disimpan"),
+ *             @OA\Property(property="data", type="object",
+ *                 @OA\Property(property="ID", type="integer", example=1),
+ *                 @OA\Property(property="LabNumber", type="string", example="LAB-12345"),
+ *                 @OA\Property(property="LabTest", type="string", example="Blood Test"),
+ *                 @OA\Property(property="TransDate", type="string", format="date", example="2024-09-06"),
+ *                 @OA\Property(property="NIK", type="string", example="1234567890123456"),
+ *                 @OA\Property(property="Age", type="integer", example=30),
+ *                 @OA\Property(property="Anamnesa", type="string", example="Pasien mengalami demam tinggi"),
+ *                 @OA\Property(property="BB", type="string", example="70"),
+ *                 @OA\Property(property="TB", type="string", example="170"),
+ *                 @OA\Property(property="LP", type="string", example="80"),
+ *                 @OA\Property(property="TD", type="string", example="120/80"),
+ *                 @OA\Property(property="BMI", type="string", example="22.5"),
+ *                 @OA\Property(
+ *                     property="patient",
+ *                     type="object",
+ *                     @OA\Property(property="ID", type="integer", example=1),
+ *                     @OA\Property(property="NIK", type="string", example="1234567890123456"),
+ *                     @OA\Property(property="FullName", type="string", example="John Doe"),
+ *                     @OA\Property(property="Sex", type="string", example="Male"),
+ *                     @OA\Property(property="BirthDate", type="string", format="date", example="1994-05-12"),
+ *                     @OA\Property(property="Address", type="string", example="Jl. Merdeka No. 10, Jakarta"),
+ *                     @OA\Property(property="Phone", type="string", example="08123456789"),
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Bad Request",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="NIK tidak ditemukan dalam database pasien"),
+ *             @OA\Property(property="errors", type="object",
+ *                 @OA\Property(property="NIK", type="array",
+ *                     @OA\Items(type="string", example="NIK tidak terdaftar")
+ *                 )
+ *             )
+ *         )
+ *     )
+ * )
+ */
+
     public function store(Request $request)
 {
     // Validasi input
     $validatedData = $request->validate([
-        'LabNumber' => 'required|string|max:20',
+        'LabNumber' => 'required|string|max:20|unique:Lab_Trans,LabNumber',
         'LabTest' => 'required|string|max:20',
         'TransDate' => 'required|date',
         'DoctorReferral' => 'nullable|string|max:50',
-        'PatientID' => 'required|exists:Patient,ID',
+        'NIK' => 'required|string|exists:Patient,NIK', // Ubah validasi menjadi berdasarkan NIK
         'Anamnesa' => 'nullable|string|max:250',
         'BB' => 'nullable|string|max:10',
         'TB' => 'nullable|string|max:10',
@@ -240,21 +281,35 @@ class LabTransController extends Controller
         'Lab_Trans_Others.*.SupportServiceNotes' => 'nullable|string',
     ]);
 
-    // Ambil data pasien berdasarkan PatientID
-    $patient = Patient::find($validatedData['PatientID']);
+    // Cek apakah NIK ada di tabel Patient
+    $patient = Patient::where('NIK', $validatedData['NIK'])->first();
+
+    // Jika NIK tidak ditemukan, kembalikan error validasi
+    if (!$patient) {
+        return response()->json([
+            'message' => 'NIK tidak ditemukan dalam database pasien',
+            'errors' => ['NIK' => ['NIK tidak terdaftar']],
+        ], 400);
+    }
+
+    // Ambil PatientID berdasarkan NIK yang ditemukan
+    $validatedData['PatientID'] = $patient->ID;
 
     // Hitung umur jika BirthDate tersedia
     $age = null;
-    if ($patient && $patient->BirthDate) {
+    if ($patient->BirthDate) {
         $birthYear = date('Y', strtotime($patient->BirthDate));
         $currentYear = date('Y');
         $age = (string) ($currentYear - $birthYear);
     }
-    $validatedData['Age'] = $age; // Tambahkan Age ke response
+    $validatedData['Age'] = $age;
 
     // Tambahkan nilai default
     $validatedData['gcrecord'] = false;
-    $validatedData['CreateDate'] = now();
+    date_default_timezone_set('Asia/Jakarta');
+
+    // Pastikan LastModifiedDate selalu diisi dengan waktu sekarang
+    $validatedData['CreateDate'] = now()->format('Y-m-d H:i:s');
 
     // Simpan data ke tabel Lab_Trans
     $labTrans = Lab_Trans::create($validatedData);
@@ -281,22 +336,24 @@ class LabTransController extends Controller
         }
     }
 
-    // Format response sesuai dengan GET
+    // Format response
     $formattedData = [
         'ID' => $labTrans->ID,
         'LabNumber' => $labTrans->LabNumber,
         'LabTest' => $labTrans->LabTest,
         'TransDate' => $labTrans->TransDate,
         'DoctorReferral' => $labTrans->DoctorReferral,
-        'Age' => $age, // Umur dihitung otomatis
+        'Age' => $age,
         'Anamnesa' => $labTrans->Anamnesa,
         'BB' => $labTrans->BB,
         'TB' => $labTrans->TB,
         'LP' => $labTrans->LP,
         'TD' => $labTrans->TD,
         'BMI' => $labTrans->BMI,
-        'PatientID' => $labTrans->PatientID,
-        'patient' => $patient ? [
+        'CreateDate'=> $labTrans->CreateDate,
+        'CreateBy'=> $labTrans->CreateBy,
+        'NIK' => $validatedData['NIK'],
+        'patient' => [
             'ID'                  => $patient->ID ?? null,
             'NIK'                 => $patient->NIK ?? null,
             'PatientID_Provider'  => $patient->PatientID_Provider ?? null,
@@ -305,9 +362,7 @@ class LabTransController extends Controller
             'BirthDate'           => $patient->BirthDate ?? null,
             'Address'             => $patient->Address ?? null,
             'Phone'               => $patient->Phone ?? null,
-            // 'CreateBy'            => $patient->CreateBy ?? null,
-            // 'LastModifiedBy'      => $patient->LastModifiedBy ?? null,
-        ] : null,
+        ],
         'Lab_Trans_Details' => $labTrans->labTransDetails->map(function ($detail) {
             return [
                 'ID'              => $detail->ID,
@@ -333,199 +388,165 @@ class LabTransController extends Controller
     ], 201);
 }
 
+
     /**
-     * @OA\Put(
-     *     path="/api/labtrans/{id}",
-     *     summary="Update an existing Lab Transaction",
-     *     tags={"Lab Trans"},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         description="ID of the Lab Transaction",
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"LabNumber", "LabTest", "TransDate", "PatientID"},
-     *             @OA\Property(property="LabNumber", type="string", example="LAB-12345"),
-     *             @OA\Property(property="LabTest", type="string", example="Blood Test"),
-     *             @OA\Property(property="TransDate", type="string", format="date", example="2024-09-06"),
-     *             @OA\Property(property="DoctorReferral", type="string", example="Dr. John Doe"),
-     *             @OA\Property(property="PatientID", type="integer", example=1),
-     *             @OA\Property(property="Age", type="string", example="30"),
-     *             @OA\Property(property="Anamnesa", type="string", example="Pasien mengalami demam tinggi"),
-     *             @OA\Property(property="BB", type="string", example="70"),
-     *             @OA\Property(property="TB", type="string", example="170"),
-     *             @OA\Property(property="LP", type="string", example="80"),
-     *             @OA\Property(property="TD", type="string", example="120/80"),
-     *             @OA\Property(property="BMI", type="string", example="22.5"),
-     *             @OA\Property(property="FinalStatement", type="string", example="Sehat"),
-     *             @OA\Property(property="FinalResult", type="string", example="Normal"),
-     *             @OA\Property(property="Status", type="string", example="Completed"),
-     *             @OA\Property(property="LastModifiedBy", type="string", example="admin"),
-     *             @OA\Property(
-     *                 property="Lab_Trans_Details",
-     *                 type="array",
-     *                 @OA\Items(
-     *                     @OA\Property(property="ItemTestID", type="integer", example=101),
-     *                     @OA\Property(property="ResultValue", type="string", example="5.4"),
-     *                     @OA\Property(property="Unit", type="string", example="mmol/L"),
-     *                     @OA\Property(property="ReferenceValue", type="string", example="3.9-6.1"),
-     *                     @OA\Property(property="ResultNotes", type="string", example="Norma"),
-     *                     @OA\Property(property="LastModifiedBy", type="string", example="normal"),
-     *                     @OA\Property(property="gcrecord", type="boolean", example="false"),
-     *                 )
-     *             ),
-     *             @OA\Property(
-     *                 property="Lab_Trans_Others",
-     *                 type="array",
-     *                 @OA\Items(
-     *                     @OA\Property(property="SupportServiceID", type="integer", example=201),
-     *                     @OA\Property(property="SupportServiceNotes", type="string", example="Rontgen dada dilakukan"),
-     *                     @OA\Property(property="LastModifiedBy", type="string", example="normal"),
-     *                     @OA\Property(property="gcrecord", type="boolean", example="false"),
-     *                 )
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Data berhasil diupdate",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Data berhasil diupdate"),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="ID", type="integer"),
-     *                 @OA\Property(property="LabNumber", type="string"),
-     *                 @OA\Property(property="LabTest", type="string"),
-     *                 @OA\Property(property="TransDate", type="string"),
-     *                 @OA\Property(property="PatientID", type="integer"),
-     *                 @OA\Property(property="patient", type="array", @OA\Items(type="object")),
-     *                 @OA\Property(property="Lab_Trans_Details", type="array", @OA\Items(type="object")),
-     *                 @OA\Property(property="Lab_Trans_Others", type="array", @OA\Items(type="object"))
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Lab Transaction not found"
-     *     ),
-     *     @OA\Response(
-     *         response=400,
-     *         description="Bad Request"
-     *     )
-     * )
-     */
-    public function update(Request $request, $id)
-    {
-        // Find the lab transaction
-        $labTrans = Lab_Trans::with(['patient', 'labTransDetails', 'labTransOthers'])
-            ->where('ID', $id)
-            ->where('gcrecord', 0)
-            ->firstOrFail();
+ * @OA\Put(
+ *     path="/api/labtrans/{id}",
+ *     summary="Update an existing Lab Transaction",
+ *     tags={"Lab Trans"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the Lab Transaction",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={"LabNumber", "LabTest", "TransDate", "PatientID"},
+ *             @OA\Property(property="LabNumber", type="string", example="LAB-12345"),
+ *             @OA\Property(property="LabTest", type="string", example="Blood Test"),
+ *             @OA\Property(property="TransDate", type="string", format="date", example="2024-09-06"),
+ *             @OA\Property(property="DoctorReferral", type="string", example="Dr. John Doe"),
+ *             @OA\Property(property="PatientID", type="integer", example=1),
+ *             @OA\Property(property="Anamnesa", type="string", example="Pasien mengalami demam tinggi"),
+ *             @OA\Property(property="BB", type="string", example="70"),
+ *             @OA\Property(property="TB", type="string", example="170"),
+ *             @OA\Property(property="LP", type="string", example="80"),
+ *             @OA\Property(property="TD", type="string", example="120/80"),
+ *             @OA\Property(property="BMI", type="string", example="22.5"),
+ *             @OA\Property(property="FinalStatement", type="string", example="Sehat"),
+ *             @OA\Property(property="FinalResult", type="string", example="Normal"),
+ *             @OA\Property(property="Status", type="string", example="Completed"),
+ *             @OA\Property(property="LastModifiedBy", type="string", example="admin")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Data berhasil diupdate",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Data berhasil diupdate"),
+ *             @OA\Property(property="data", type="object",
+ *                 @OA\Property(property="ID", type="integer", example=1),
+ *                 @OA\Property(property="LabNumber", type="string", example="LAB-12345"),
+ *                 @OA\Property(property="LabTest", type="string", example="Blood Test"),
+ *                 @OA\Property(property="TransDate", type="string", format="date", example="2024-09-06"),
+ *                 @OA\Property(property="DoctorReferral", type="string", example="Dr. John Doe"),
+ *                 @OA\Property(property="Age", type="string", example="30"), 
+ *                 @OA\Property(property="Anamnesa", type="string", example="Pasien mengalami demam tinggi"),
+ *                 @OA\Property(property="BB", type="string", example="70"),
+ *                 @OA\Property(property="TB", type="string", example="170"),
+ *                 @OA\Property(property="LP", type="string", example="80"),
+ *                 @OA\Property(property="TD", type="string", example="120/80"),
+ *                 @OA\Property(property="BMI", type="string", example="22.5"),
+ *                 @OA\Property(property="FinalStatement", type="string", example="Sehat"),
+ *                 @OA\Property(property="FinalResult", type="string", example="Normal"),
+ *                 @OA\Property(property="Status", type="string", example="Completed"),
+ *                 @OA\Property(property="LastModifiedBy", type="string", example="admin"),
+ *                 @OA\Property(property="patient", type="object",
+ *                     @OA\Property(property="ID", type="integer", example=1),
+ *                     @OA\Property(property="NIK", type="string", example="123456789"),
+ *                     @OA\Property(property="FullName", type="string", example="John Doe"),
+ *                     @OA\Property(property="Sex", type="string", example="Male"),
+ *                     @OA\Property(property="BirthDate", type="string", format="date", example="1994-09-06"),
+ *                     @OA\Property(property="Address", type="string", example="Jakarta, Indonesia"),
+ *                     @OA\Property(property="Phone", type="string", example="081234567890"),
+ *                     @OA\Property(property="LastModifiedBy", type="string", example="admin")
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Lab Transaction not found"
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Bad Request"
+ *     )
+ * )
+ */
 
-        // Validate the request data
-        $validatedData = $request->validate([
-            'LabNumber' => 'required|string|max:20',
-            'LabTest' => 'required|string|max:20',
-            'TransDate' => 'required|date',
-            'DoctorReferral' => 'nullable|string|max:50',
-            'PatientID' => 'required|exists:Patient,ID',
-            'Age' => 'nullable|string|max:10',
-            'Anamnesa' => 'nullable|string|max:250',
-            'BB' => 'nullable|string|max:10',
-            'TB' => 'nullable|string|max:10',
-            'LP' => 'nullable|string|max:10',
-            'TD' => 'nullable|string|max:10',
-            'BMI' => 'nullable|string|max:10',
-            'FinalStatement' => 'nullable|string|max:250',
-            'FinalResult' => 'nullable|string|max:20',
-            'Status' => 'nullable|string|max:20',
-            'LastModifiedDate' => 'nullable|date',
-            'LastModifiedBy' => 'nullable|string|max:20',
-            'Lab_Trans_Details' => 'nullable|array',
-            'Lab_Trans_Details.*.ItemTestID' => 'required|integer',
-            'Lab_Trans_Details.*.ResultValue' => 'nullable|string',
-            'Lab_Trans_Details.*.Unit' => 'nullable|string',
-            'Lab_Trans_Details.*.ReferenceValue' => 'nullable|string',
-            'Lab_Trans_Details.*.ResultNotes' => 'nullable|string',
-            'Lab_Trans_Others' => 'nullable|array',
-            'Lab_Trans_Others.*.SupportServiceID' => 'required|integer',
-            'Lab_Trans_Others.*.SupportServiceNotes' => 'nullable|string',
-        ]);
-        $validatedData['CreateDate'] = now();
-        // Update the lab transaction
-        $labTrans->update($validatedData);
+ public function update(Request $request, $id)
+{
+    // Find the lab transaction
+    $labTrans = Lab_Trans::with(['patient'])
+        ->where('ID', $id)
+        ->where('gcrecord', 0)
+        ->firstOrFail();
 
-        // Format the response
-        $formattedData = [
-            'ID' => $labTrans->ID,
-            'LabNumber' => $labTrans->LabNumber,
-            'LabTest' => $labTrans->LabTest,
-            'TransDate' => $labTrans->TransDate,
-            'DoctorReferral' => $labTrans->DoctorReferral,
-            'Age' => $labTrans->Age,
-            'Anamnesa' => $labTrans->Anamnesa,
-            'BB' => $labTrans->BB,
-            'TB' => $labTrans->TB,
-            'LP' => $labTrans->LP,
-            'TD' => $labTrans->TD,
-            'BMI' => $labTrans->BMI,
-            'FinalStatement' => $labTrans->FinalStatement,
-            'FinalResult' => $labTrans->FinalResult,
-            'Status' => $labTrans->Status,
-            // 'CreateDate' => $labTrans->CreateDate,
-            // 'CreateBy' => $labTrans->CreateBy,
-            // 'LastModifiedDate' => $labTrans->LastModifiedDate,
-            'LastModifiedBy' => $labTrans->LastModifiedBy,
-            // 'gcrecord' => $labTrans->gcrecord,
-            'patient' => $labTrans->patient ? [
-                [
-                    'NIK' => $labTrans->patient->NIK ?? null,
-                    'PatientID_Provider' => $labTrans->patient->PatientID_Provider ?? null,
-                    'FullName' => $labTrans->patient->FullName ?? null,
-                    'Sex' => $labTrans->patient->Sex ?? null,
-                    'BirthDate' => $labTrans->patient->BirthDate ?? null,
-                    'Address' => $labTrans->patient->Address ?? null,
-                    'Phone' => $labTrans->patient->Phone ?? null,
-                    // 'CreateBy' => $labTrans->patient->CreateBy ?? null,
-                    'LastModifiedBy' => $labTrans->patient->LastModifiedBy ?? null,
-                    // 'gcrecord' => $labTrans->patient->gcrecord ?? null,
-                ]
-            ] : [],
-            'Lab_Trans_Details' => $labTrans->labTransDetails->map(function ($detail) {
-                return [
-                    // 'LabTransID' => $detail->LabTransID,
-                    'ItemTestID' => $detail->ItemTestID,
-                    'ResultValue' => $detail->ResultValue,
-                    'Unit' => $detail->Unit,
-                    'ReferenceValue' => $detail->ReferenceValue,
-                    'ResultNotes' => $detail->ResultNotes,
-                    // 'CreateDate' => $detail->CreateDate,
-                    // 'CreateBy' => $detail->CreateBy ?? null,
-                    // 'LastModifiedDate' => $detail->LastModifiedDate ?? null,
-                    'LastModifiedBy' => $detail->LastModifiedBy ?? null,
-                    // 'gcrecord' => $detail->gcrecord ?? null,
-                ];
-            }),
-            'Lab_Trans_Others' => $labTrans->labTransOthers->map(function ($other) {
-                return [
-                    // 'LabTransID' => $other->LabTransID,
-                    'SupportServiceID' => $other->SupportServiceID,
-                    'SupportServiceNotes' => $other->SupportServiceNotes,
-                    'CreateDate' => $other->CreateDate,
-                    'CreateBy' => $other->CreateBy ?? null,
-                    'LastModifiedDate' => $other->LastModifiedDate ?? null,
-                    'LastModifiedBy' => $other->LastModifiedBy ?? null,
-                    'gcrecord' => $other->gcrecord ?? null,
-                ];
-            }),
-        ];
-        
-        return response()->json([
-            'message' => 'Data berhasil diupdate',
-            'data' => $formattedData
-        ], 200);
+    // Validate the request data
+    $validatedData = $request->validate([
+        'LabNumber' => 'required|string|max:20',
+        'LabTest' => 'required|string|max:20',
+        'TransDate' => 'required|date',
+        'DoctorReferral' => 'nullable|string|max:50',
+        'PatientID' => 'required|exists:Patient,ID',
+        'Anamnesa' => 'nullable|string|max:250',
+        'BB' => 'nullable|string|max:10',
+        'TB' => 'nullable|string|max:10',
+        'LP' => 'nullable|string|max:10',
+        'TD' => 'nullable|string|max:10',
+        'BMI' => 'nullable|string|max:10',
+        'FinalStatement' => 'nullable|string|max:250',
+        'FinalResult' => 'nullable|string|max:20',
+        'Status' => 'nullable|string|max:20',
+        'LastModifiedBy' => 'nullable|string|max:20',
+    ]);
+
+    // Update LastModifiedDate otomatis ke waktu sekarang
+    date_default_timezone_set('Asia/Jakarta');
+    $validatedData['LastModifiedDate'] = now()->format('Y-m-d H:i:s');
+
+    // Update the lab transaction
+    $labTrans->update($validatedData);
+
+    // Ambil data pasien jika gcrecord = 0, jika gcrecord = 1 maka kosongkan
+    $patient = ($labTrans->patient && $labTrans->patient->gcrecord == 0) ? $labTrans->patient : null;
+
+    // Hitung umur otomatis berdasarkan BirthDate pasien jika patient ada
+    $age = null;
+    if ($patient && $patient->BirthDate) {
+        $birthYear = date('Y', strtotime($patient->BirthDate));
+        $currentYear = date('Y');
+        $age = (string) ($currentYear - $birthYear);
     }
+
+    // Format the response
+    $formattedData = [
+        'ID' => $labTrans->ID,
+        'LabNumber' => $labTrans->LabNumber,
+        'LabTest' => $labTrans->LabTest,
+        'TransDate' => $labTrans->TransDate,
+        'DoctorReferral' => $labTrans->DoctorReferral,
+        'Age' => $age, // Umur otomatis dihitung jika pasien tersedia
+        'Anamnesa' => $labTrans->Anamnesa,
+        'BB' => $labTrans->BB,
+        'TB' => $labTrans->TB,
+        'LP' => $labTrans->LP,
+        'TD' => $labTrans->TD,
+        'BMI' => $labTrans->BMI,
+        'FinalStatement' => $labTrans->FinalStatement,
+        'FinalResult' => $labTrans->FinalResult,
+        'Status' => $labTrans->Status,
+        'LastModifiedBy' => $labTrans->LastModifiedBy,
+        'patient' => $patient ? [
+            'ID'                  => $patient->ID ?? null,
+            'NIK'                 => $patient->NIK ?? null,
+            'PatientID_Provider'  => $patient->PatientID_Provider ?? null,
+            'FullName'            => $patient->FullName ?? null,
+            'Sex'                 => $patient->Sex ?? null,
+            'BirthDate'           => $patient->BirthDate ?? null,
+            'Address'             => $patient->Address ?? null,
+            'Phone'               => $patient->Phone ?? null,
+            'LastModifiedBy'      => $patient->LastModifiedBy ?? null,
+        ] : null, // Jika gcrecord = 1, maka patient = null
+    ];
+
+    return response()->json([
+        'message' => 'Data berhasil diupdate',
+        'data' => $formattedData
+    ], 200);
+}
 }

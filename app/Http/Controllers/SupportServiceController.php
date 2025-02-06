@@ -9,58 +9,96 @@ use OpenApi\Annotations as OA;
 class SupportServiceController extends Controller
 {
     /**
-     * @OA\Get(
-     *     path="/api/supportservice",
-     *     summary="Get all Support Services",
-     *     description="Retrieve all support services, with an optional search parameter.",
-     *     tags={"SupportService"},
-     *     @OA\Parameter(
-     *         name="search",
-     *         in="query",
-     *         description="Search support services by code or name",
-     *         required=false,
-     *         @OA\Schema(type="string")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Successful operation",
-     *         @OA\JsonContent(
-     *             type="array",
-     *             @OA\Items(ref="#/components/schemas/SupportService")
-     *         )
-     *     )
-     * )
-     */
-    public function index(Request $request)
-    {
-        $service = SupportService::whereNull('gcrecord')->orWhere('gcrecord', 0);
+ * @OA\Get(
+ *     path="/api/supportservice",
+ *     summary="Get all Support Services",
+ *     description="Retrieve all support services, with optional ID or search query.",
+ *     tags={"SupportService"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="query",
+ *         description="Search by exact ID (integer match).",
+ *         required=false,
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Parameter(
+ *         name="query",
+ *         in="query",
+ *         description="Search support services by code or name using LIKE match.",
+ *         required=false,
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation",
+ *         @OA\JsonContent(
+ *             type="array",
+ *             @OA\Items(ref="#/components/schemas/SupportService")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Data not found"
+ *     )
+ * )
+ */
+public function index(Request $request)
+{
+    $id = $request->query('id');
+    $query = $request->query('query');
 
-        // Tambahkan parameter pencarian
-        if ($request->has('search') && !empty($request->search)) {
-            $search = $request->search;
+    $services = SupportService::where('gcrecord', 0) // Pastikan hanya mengambil data dengan gcrecord = 0
+        ->when($id, function ($q) use ($id) {
+            $q->where('ID', $id) // Filter berdasarkan ID (gunakan "=")
+              ->where('gcrecord', 0); // Pastikan gcrecord tetap 0
+        })
+        ->when(!$id && $query, function ($q) use ($query) {
+            if (stripos($query, 'urine') !== false) {
+                // Jika query berisi "urine", hanya cari di SupportServiceName atau SupportServiceCode yang mengandung "urine"
+                $q->where(function ($subQuery) {
+                    $subQuery->where('SupportServiceName', 'LIKE', '%urine%')
+                             ->orWhere('SupportServiceCode', 'LIKE', '%urine%');
+                })->where('gcrecord', 0); // Pastikan gcrecord tetap 0
+            } else {
+                // Jika query bukan "urine", cari di beberapa kolom menggunakan LIKE
+                $q->where(function ($subQuery) use ($query) {
+                    $subQuery->where('SupportServiceName', 'LIKE', "%{$query}%")
+                             ->orWhere('SupportServiceCode', 'LIKE', "%{$query}%");
+                })->where('gcrecord', 0); // Pastikan gcrecord tetap 0
+            }
+        })
+        ->get();
 
-            $service->where(function ($q) use ($search) {
-                $q->where('SupportServiceCode', 'LIKE', "%{$search}%")
-                    ->orWhere('SupportServiceName', 'LIKE', "%{$search}%");
-            });
-        }
+    // Hitung total data setelah filter
+    $total = $services->count();
 
-        $formattedData = $service->get()->map(function ($service) {
-            return [
-                'ID' => $service->ID,
-                'SupportServiceCode' => $service->SupportServiceCode,
-                'SupportServiceName' => $service->SupportServiceName,
-                'CreateDate' => $service->CreateDate,
-                'CreateBy' => $service->CreateBy,
-                'LastModifiedDate' => $service->LastModifiedDate,
-                'LastModifiedBy' => $service->LastModifiedBy,
-                // 'gcrecord' => $service->gcrecord,
-            ];
-        });
-
-        return response()->json($formattedData, 200);
+    if ($services->isEmpty()) {
+        return response()->json([
+            'message' => 'Data not found',
+            'total' => 0,
+            'data' => []
+        ], 404);
     }
 
+    // Format data untuk respons
+    $formattedData = $services->map(function ($service) {
+        return [
+            'ID' => $service->ID,
+            'SupportServiceCode' => $service->SupportServiceCode,
+            'SupportServiceName' => $service->SupportServiceName,
+            'CreateDate' => $service->CreateDate,
+            'CreateBy' => $service->CreateBy,
+            'LastModifiedDate' => $service->LastModifiedDate,
+            'LastModifiedBy' => $service->LastModifiedBy,
+        ];
+    });
+
+    return response()->json([
+        'message' => 'Data berhasil diambil',
+        'totaldata' => $total,
+        'data' => $formattedData
+    ], 200);
+}
 
     /**
      * @OA\Post(

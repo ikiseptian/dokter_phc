@@ -50,7 +50,8 @@ Route::put('/labtransdetail/{id}', [LabTransDetailController::class, 'update']);
 
 Route::get('/labtransother', [LabTransOtherController::class, 'index']);
 Route::put('/labtransother/{id}', [LabTransOtherController::class, 'update']);
-// Route::post('/labtransother', [LabTransOtherController::class, 'store']);
+Route::post('/labtransother', [LabTransOtherController::class, 'store']);
+
 Route::get('/supportservice', [SupportServiceController::class, 'index']);
 Route::post('/supportservice', [SupportServiceController::class, 'store']);
 Route::put('/supportservice/{id}', [SupportServiceController::class, 'update']);

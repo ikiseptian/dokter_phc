@@ -11,13 +11,22 @@
                 "tags": [
                     "Item Test"
                 ],
-                "summary": "Get all Item Tests or search by query",
+                "summary": "Get all Item Tests or search by ID or query (Urine filter)",
                 "operationId": "40c8af15f508d56a05797a33d267f350",
                 "parameters": [
                     {
+                        "name": "id",
+                        "in": "query",
+                        "description": "Search by exact ID (integer match)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
                         "name": "query",
                         "in": "query",
-                        "description": "Search query for all fields",
+                        "description": "Search by text query (LIKE match, 'urine' filter applied)",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -26,7 +35,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "A list of Item Tests (filtered if query is provided)",
+                        "description": "A list of Item Tests (filtered by ID or Urine query)",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -202,13 +211,22 @@
                 "tags": [
                     "Lab Trans"
                 ],
-                "summary": "Search Lab Trans by various fields",
+                "summary": "Search Lab Trans by ID or query (including urine filter)",
                 "operationId": "ffd047780c3fda111188668d60ae6998",
                 "parameters": [
                     {
-                        "name": "q",
+                        "name": "id",
                         "in": "query",
-                        "description": "Search query that will be applied to multiple fields (e.g., LabNumber, LabTest, PatientID)",
+                        "description": "Search by exact ID (integer match)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "query",
+                        "in": "query",
+                        "description": "Search by text query (LIKE match), filtering for 'urine' if provided",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -217,7 +235,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "A list of Lab Trans",
+                        "description": "A list of Lab Trans (filtered by ID or query)",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -246,7 +264,7 @@
                                     "LabNumber",
                                     "LabTest",
                                     "TransDate",
-                                    "PatientID"
+                                    "NIK"
                                 ],
                                 "properties": {
                                     "LabNumber": {
@@ -266,9 +284,9 @@
                                         "type": "string",
                                         "example": "Dr. John Doe"
                                     },
-                                    "PatientID": {
-                                        "type": "integer",
-                                        "example": 1
+                                    "NIK": {
+                                        "type": "string",
+                                        "example": "1234567890123456"
                                     },
                                     "Anamnesa": {
                                         "type": "string",
@@ -398,9 +416,71 @@
                                                     "format": "date",
                                                     "example": "2024-09-06"
                                                 },
-                                                "PatientID": {
+                                                "NIK": {
+                                                    "type": "string",
+                                                    "example": "1234567890123456"
+                                                },
+                                                "Age": {
                                                     "type": "integer",
-                                                    "example": 1
+                                                    "example": 30
+                                                },
+                                                "Anamnesa": {
+                                                    "type": "string",
+                                                    "example": "Pasien mengalami demam tinggi"
+                                                },
+                                                "BB": {
+                                                    "type": "string",
+                                                    "example": "70"
+                                                },
+                                                "TB": {
+                                                    "type": "string",
+                                                    "example": "170"
+                                                },
+                                                "LP": {
+                                                    "type": "string",
+                                                    "example": "80"
+                                                },
+                                                "TD": {
+                                                    "type": "string",
+                                                    "example": "120/80"
+                                                },
+                                                "BMI": {
+                                                    "type": "string",
+                                                    "example": "22.5"
+                                                },
+                                                "patient": {
+                                                    "properties": {
+                                                        "ID": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "NIK": {
+                                                            "type": "string",
+                                                            "example": "1234567890123456"
+                                                        },
+                                                        "FullName": {
+                                                            "type": "string",
+                                                            "example": "John Doe"
+                                                        },
+                                                        "Sex": {
+                                                            "type": "string",
+                                                            "example": "Male"
+                                                        },
+                                                        "BirthDate": {
+                                                            "type": "string",
+                                                            "format": "date",
+                                                            "example": "1994-05-12"
+                                                        },
+                                                        "Address": {
+                                                            "type": "string",
+                                                            "example": "Jl. Merdeka No. 10, Jakarta"
+                                                        },
+                                                        "Phone": {
+                                                            "type": "string",
+                                                            "example": "08123456789"
+                                                        }
+                                                    },
+                                                    "type": "object"
                                                 }
                                             },
                                             "type": "object"
@@ -412,7 +492,32 @@
                         }
                     },
                     "400": {
-                        "description": "Bad Request"
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "NIK tidak ditemukan dalam database pasien"
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "NIK": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "NIK tidak terdaftar"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -468,10 +573,6 @@
                                         "type": "integer",
                                         "example": 1
                                     },
-                                    "Age": {
-                                        "type": "string",
-                                        "example": "30"
-                                    },
                                     "Anamnesa": {
                                         "type": "string",
                                         "example": "Pasien mengalami demam tinggi"
@@ -511,66 +612,6 @@
                                     "LastModifiedBy": {
                                         "type": "string",
                                         "example": "admin"
-                                    },
-                                    "Lab_Trans_Details": {
-                                        "type": "array",
-                                        "items": {
-                                            "properties": {
-                                                "ItemTestID": {
-                                                    "type": "integer",
-                                                    "example": 101
-                                                },
-                                                "ResultValue": {
-                                                    "type": "string",
-                                                    "example": "5.4"
-                                                },
-                                                "Unit": {
-                                                    "type": "string",
-                                                    "example": "mmol/L"
-                                                },
-                                                "ReferenceValue": {
-                                                    "type": "string",
-                                                    "example": "3.9-6.1"
-                                                },
-                                                "ResultNotes": {
-                                                    "type": "string",
-                                                    "example": "Norma"
-                                                },
-                                                "LastModifiedBy": {
-                                                    "type": "string",
-                                                    "example": "normal"
-                                                },
-                                                "gcrecord": {
-                                                    "type": "boolean",
-                                                    "example": "false"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "Lab_Trans_Others": {
-                                        "type": "array",
-                                        "items": {
-                                            "properties": {
-                                                "SupportServiceID": {
-                                                    "type": "integer",
-                                                    "example": 201
-                                                },
-                                                "SupportServiceNotes": {
-                                                    "type": "string",
-                                                    "example": "Rontgen dada dilakukan"
-                                                },
-                                                "LastModifiedBy": {
-                                                    "type": "string",
-                                                    "example": "normal"
-                                                },
-                                                "gcrecord": {
-                                                    "type": "boolean",
-                                                    "example": "false"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
                                     }
                                 },
                                 "type": "object"
@@ -592,37 +633,107 @@
                                         "data": {
                                             "properties": {
                                                 "ID": {
-                                                    "type": "integer"
+                                                    "type": "integer",
+                                                    "example": 1
                                                 },
                                                 "LabNumber": {
-                                                    "type": "string"
+                                                    "type": "string",
+                                                    "example": "LAB-12345"
                                                 },
                                                 "LabTest": {
-                                                    "type": "string"
+                                                    "type": "string",
+                                                    "example": "Blood Test"
                                                 },
                                                 "TransDate": {
-                                                    "type": "string"
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2024-09-06"
                                                 },
-                                                "PatientID": {
-                                                    "type": "integer"
+                                                "DoctorReferral": {
+                                                    "type": "string",
+                                                    "example": "Dr. John Doe"
+                                                },
+                                                "Age": {
+                                                    "type": "string",
+                                                    "example": "30"
+                                                },
+                                                "Anamnesa": {
+                                                    "type": "string",
+                                                    "example": "Pasien mengalami demam tinggi"
+                                                },
+                                                "BB": {
+                                                    "type": "string",
+                                                    "example": "70"
+                                                },
+                                                "TB": {
+                                                    "type": "string",
+                                                    "example": "170"
+                                                },
+                                                "LP": {
+                                                    "type": "string",
+                                                    "example": "80"
+                                                },
+                                                "TD": {
+                                                    "type": "string",
+                                                    "example": "120/80"
+                                                },
+                                                "BMI": {
+                                                    "type": "string",
+                                                    "example": "22.5"
+                                                },
+                                                "FinalStatement": {
+                                                    "type": "string",
+                                                    "example": "Sehat"
+                                                },
+                                                "FinalResult": {
+                                                    "type": "string",
+                                                    "example": "Normal"
+                                                },
+                                                "Status": {
+                                                    "type": "string",
+                                                    "example": "Completed"
+                                                },
+                                                "LastModifiedBy": {
+                                                    "type": "string",
+                                                    "example": "admin"
                                                 },
                                                 "patient": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "object"
-                                                    }
-                                                },
-                                                "Lab_Trans_Details": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "object"
-                                                    }
-                                                },
-                                                "Lab_Trans_Others": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "object"
-                                                    }
+                                                    "properties": {
+                                                        "ID": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "NIK": {
+                                                            "type": "string",
+                                                            "example": "123456789"
+                                                        },
+                                                        "FullName": {
+                                                            "type": "string",
+                                                            "example": "John Doe"
+                                                        },
+                                                        "Sex": {
+                                                            "type": "string",
+                                                            "example": "Male"
+                                                        },
+                                                        "BirthDate": {
+                                                            "type": "string",
+                                                            "format": "date",
+                                                            "example": "1994-09-06"
+                                                        },
+                                                        "Address": {
+                                                            "type": "string",
+                                                            "example": "Jakarta, Indonesia"
+                                                        },
+                                                        "Phone": {
+                                                            "type": "string",
+                                                            "example": "081234567890"
+                                                        },
+                                                        "LastModifiedBy": {
+                                                            "type": "string",
+                                                            "example": "admin"
+                                                        }
+                                                    },
+                                                    "type": "object"
                                                 }
                                             },
                                             "type": "object"
@@ -651,9 +762,18 @@
                 "operationId": "e9cf1d304f246ab4293fdbcb13063518",
                 "parameters": [
                     {
-                        "name": "search",
+                        "name": "id",
                         "in": "query",
-                        "description": "Search across multiple fields",
+                        "description": "Search by exact ID (integer match)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "query",
+                        "in": "query",
+                        "description": "Search by text query (LIKE match), filtering for 'urine' if provided",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -676,6 +796,77 @@
                     },
                     "404": {
                         "description": "Data not found"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Lab Detail"
+                ],
+                "summary": "Create a new LabTransDetail",
+                "operationId": "74562684ef51f3ea04f560a58eb03a9a",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "LabTransID": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "ItemTestID": {
+                                        "type": "integer",
+                                        "example": 10
+                                    },
+                                    "ResultValue": {
+                                        "type": "string",
+                                        "example": "Positive"
+                                    },
+                                    "Unit": {
+                                        "type": "string",
+                                        "example": "mg/dL"
+                                    },
+                                    "ReferenceValue": {
+                                        "type": "string",
+                                        "example": "70-110"
+                                    },
+                                    "ResultNotes": {
+                                        "type": "string",
+                                        "example": "Normal Range"
+                                    },
+                                    "CreateBy": {
+                                        "type": "string",
+                                        "example": "Admin"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Data berhasil disimpan",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Data berhasil disimpan"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/LabTransDetail"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
                     }
                 }
             }
@@ -773,9 +964,18 @@
                 "operationId": "3ffe3c986d4d00d359e1c70447d5d930",
                 "parameters": [
                     {
-                        "name": "search",
+                        "name": "id",
                         "in": "query",
-                        "description": "Search across multiple fields (LabNumber, SupportServiceNotes, etc.)",
+                        "description": "Search by exact ID (integer match)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "query",
+                        "in": "query",
+                        "description": "Search by text query (LIKE match), filtering for 'urine' if provided",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -798,6 +998,65 @@
                     },
                     "404": {
                         "description": "Data not found"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "LabTransOther"
+                ],
+                "summary": "Create a new LabTransOther",
+                "operationId": "4e1310d511569bf205322f109693e1e4",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "LabTransID": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "SupportServiceID": {
+                                        "type": "integer",
+                                        "example": 10
+                                    },
+                                    "SupportServiceNotes": {
+                                        "type": "string",
+                                        "example": "MRI Scan Required"
+                                    },
+                                    "CreateBy": {
+                                        "type": "string",
+                                        "example": "Admin"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Data berhasil disimpan",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Data berhasil disimpan"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/LabTransOther"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
                     }
                 }
             }
@@ -835,10 +1094,6 @@
                                     "SupportServiceNotes": {
                                         "type": "string"
                                     },
-                                    "LastModifiedDate": {
-                                        "type": "string",
-                                        "format": "date"
-                                    },
                                     "LastModifiedBy": {
                                         "type": "string"
                                     }
@@ -871,17 +1126,25 @@
                     "Pasien"
                 ],
                 "summary": "Ambil semua data pasien",
-                "description": "Mengambil daftar semua pasien yang terdaftar. Bisa menggunakan parameter pencarian.",
+                "description": "Mengambil daftar semua pasien yang terdaftar. Bisa menggunakan parameter pencarian berdasarkan ID atau teks.",
                 "operationId": "49dd4f9c6782abbdbf414e9da709f276",
                 "parameters": [
                     {
-                        "name": "search",
+                        "name": "id",
                         "in": "query",
-                        "description": "Parameter pencarian untuk mencocokkan data pasien berdasarkan NIK, PatientID_Provider, atau kolom lain.",
+                        "description": "Cari berdasarkan ID pasien yang spesifik (integer match).",
                         "required": false,
                         "schema": {
-                            "type": "string",
-                            "example": "John"
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "query",
+                        "in": "query",
+                        "description": "Cari berdasarkan NIK, FullName, Phone, atau Address dengan pencarian LIKE.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 ],
@@ -898,6 +1161,9 @@
                                 }
                             }
                         }
+                    },
+                    "404": {
+                        "description": "Data tidak ditemukan"
                     }
                 }
             },
@@ -1087,16 +1353,27 @@
                     "SupportService"
                 ],
                 "summary": "Get all Support Services",
-                "description": "Retrieve all support services, with an optional search parameter.",
+                "description": "Retrieve all support services, with optional ID or search query.",
                 "operationId": "0d001f6e538c1212c09ff29f9e8621c2",
                 "parameters": [
                     {
-                        "name": "search",
+                        "name": "id",
                         "in": "query",
-                        "description": "Search support services by code or name",
+                        "description": "Search by exact ID (integer match).",
                         "required": false,
                         "schema": {
-                            "type": "string"
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "query",
+                        "in": "query",
+                        "description": "Search support services by code or name using LIKE match.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "urine"
                         }
                     }
                 ],
@@ -1113,6 +1390,9 @@
                                 }
                             }
                         }
+                    },
+                    "404": {
+                        "description": "Data not found"
                     }
                 }
             },

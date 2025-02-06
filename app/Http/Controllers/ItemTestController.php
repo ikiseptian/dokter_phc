@@ -8,61 +8,79 @@ use OpenApi\Annotations as OA;
 
 class ItemTestController extends Controller
 {
-    /**
-     * @OA\Get(
-     *     path="/api/itemtest",
-     *     summary="Get all Item Tests or search by query",
-     *     tags={"Item Test"},
-     *     @OA\Parameter(
-     *         name="query",
-     *         in="query",
-     *         required=false,
-     *         description="Search query for all fields",
-     *         @OA\Schema(type="string")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="A list of Item Tests (filtered if query is provided)",
-     *         @OA\JsonContent(
-     *             type="array",
-     *             @OA\Items(ref="#/components/schemas/ItemTest")
-     *         )
-     *     )
-     * )
-     */
-    public function index(Request $request)
-    {
-        $query = $request->query('query');
+/**
+ * @OA\Get(
+ *     path="/api/itemtest",
+ *     summary="Get all Item Tests or search by ID or query (Urine filter)",
+ *     tags={"Item Test"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="query",
+ *         required=false,
+ *         description="Search by exact ID (integer match)",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Parameter(
+ *         name="query",
+ *         in="query",
+ *         required=false,
+ *         description="Search by text query (LIKE match, 'urine' filter applied)",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="A list of Item Tests (filtered by ID or Urine query)",
+ *         @OA\JsonContent(
+ *             type="array",
+ *             @OA\Items(ref="#/components/schemas/ItemTest")
+ *         )
+ *     )
+ * )
+ */
+public function index(Request $request)
+{
+    $id = $request->query('id');
+    $query = $request->query('query');
 
-        $items = ItemTest::where('gcrecord', 0)
-            ->when($query, function ($q) use ($query) {
+    $items = ItemTest::where('gcrecord', 0)
+        ->when($id, function ($q) use ($id) {
+            $q->where('ID', $id); // Jika ID diberikan, cari berdasarkan ID saja
+        })
+        ->when(!$id && $query, function ($q) use ($query) {
+            if (stripos($query, 'urine') !== false) {
+                $q->where('Descriptions', 'LIKE', "%urine%");
+            } else {
                 $q->where('ItemTestCode', 'LIKE', "%{$query}%")
                     ->orWhere('ItemTestName', 'LIKE', "%{$query}%")
                     ->orWhere('Group', 'LIKE', "%{$query}%")
                     ->orWhere('SubGroup', 'LIKE', "%{$query}%")
                     ->orWhere('Descriptions', 'LIKE', "%{$query}%");
-            });
-
-        $formattedData = $items->get()->map(function ($items) {
-            return [
-                'ID' => $items->ID,
-                'ItemTestCode' => $items->ItemTestCode,
-                'ItemTestName' => $items->ItemTestName,
-                'Group' => $items->Group,
-                'SubGroup' => $items->SubGroup,
-                'Descriptions' => $items->Descriptions,
-                'CreateDate' => $items->CreateDate,
-                'CreateBy' => $items->CreateBy,
-                'LastModifiedDate' => $items->LastModifiedDate,
-                'LastModifiedBy' => $items->LastModifiedBy,
-                // 'gcrecord' => $items->gcrecord,
-            ];
+            }
         });
 
+    // Dapatkan total jumlah data sebelum mengambil data
+    $totalData = $items->count();
 
+    $formattedData = $items->get()->map(function ($item) {
+        return [
+            'ID' => $item->ID,
+            'ItemTestCode' => $item->ItemTestCode,
+            'ItemTestName' => $item->ItemTestName,
+            'Group' => $item->Group,
+            'SubGroup' => $item->SubGroup,
+            'Descriptions' => $item->Descriptions,
+            'CreateDate' => $item->CreateDate,
+            'CreateBy' => $item->CreateBy,
+            'LastModifiedDate' => $item->LastModifiedDate,
+            'LastModifiedBy' => $item->LastModifiedBy,
+        ];
+    });
 
-        return response()->json($formattedData, 200);
-    }
+    return response()->json([
+        'totaldata' => $totalData,
+        'data' => $formattedData
+    ], 200);
+}
 
 
     /**
@@ -217,7 +235,7 @@ public function update(Request $request, $id)
     $item->update($validated);
 
     // Sembunyikan field `CreateDate` dalam response
-    return response()->json($item->only([
+    return response()->json($item->only([ 
         'ID',
         'ItemTestCode',
         'ItemTestName',
