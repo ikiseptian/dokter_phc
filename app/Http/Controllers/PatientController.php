@@ -9,7 +9,7 @@ use Carbon\Carbon;
 
 class PatientController extends Controller
 {
-    /**
+/**
  * @OA\Get(
  *     path="/api/pasien",
  *     summary="Ambil semua data pasien",
@@ -33,13 +33,36 @@ class PatientController extends Controller
  *         response=200,
  *         description="Daftar pasien berhasil diambil",
  *         @OA\JsonContent(
- *             type="array",
- *             @OA\Items(ref="#/components/schemas/Patient")
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Data berhasil diambil"),
+ *             @OA\Property(property="totaldata", type="integer", example=2),
+ *             @OA\Property(property="data", type="array",
+ *                 @OA\Items(
+ *                     @OA\Property(property="ID", type="integer", example=1),
+ *                     @OA\Property(property="NIK", type="string", example="3201010101010001"),
+ *                     @OA\Property(property="PatientID_Provider", type="string", example="PAT-001"),
+ *                     @OA\Property(property="FullName", type="string", example="Budi Santoso"),
+ *                     @OA\Property(property="Sex", type="string", example="Laki-laki"),
+ *                     @OA\Property(property="BirthDate", type="string", format="date", example="1990-05-15"),
+ *                     @OA\Property(property="Phone", type="string", example="+628123456789"),
+ *                     @OA\Property(property="Address", type="string", example="Jl. Sudirman No. 45, Jakarta"),
+ *                     @OA\Property(property="CreateDate", type="string", format="date-time", example="2025-02-07 10:00:00"),
+ *                     @OA\Property(property="CreateBy", type="string", example="admin"),
+ *                     @OA\Property(property="LastModifiedDate", type="string", format="date-time", example="2025-02-07 12:00:00"),
+ *                     @OA\Property(property="LastModifiedBy", type="string", example="editor")
+ *                 )
+ *             )
  *         )
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Data tidak ditemukan"
+ *         description="Data tidak ditemukan",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Data tidak ditemukan"),
+ *             @OA\Property(property="total", type="integer", example=0),
+ *             @OA\Property(property="data", type="array", @OA\Items())
+ *         )
  *     )
  * )
  */
@@ -53,24 +76,17 @@ public function index(Request $request)
         $q->where('ID', $id); // Filter berdasarkan ID (gunakan "=")
     })
     ->when(!$id && $query, function ($q) use ($query) {
-        if (stripos($query, 'urine') !== false) {
-            // Jika query berisi "urine", filter hanya alamat atau nama yang mengandung "urine"
-            $q->where('Address', 'LIKE', '%urine%')
-              ->orWhere('FullName', 'LIKE', '%urine%');
-        } else {
-            // Jika query bukan "urine", cari di beberapa kolom menggunakan LIKE
-            $q->where(function ($subQ) use ($query) {
-                $subQ->where('NIK', 'LIKE', "%{$query}%")
-                     ->orWhere('PatientID_Provider', 'LIKE', "%{$query}%")
-                     ->orWhere('FullName', 'LIKE', "%{$query}%")
-                     ->orWhere('Sex', 'LIKE', "%{$query}%")
-                     ->orWhere('BirthDate', 'LIKE', "%{$query}%")
-                     ->orWhere('Address', 'LIKE', "%{$query}%")
-                     ->orWhere('Phone', 'LIKE', "%{$query}%")
-                     ->orWhere('CreateBy', 'LIKE', "%{$query}%")
-                     ->orWhere('LastModifiedBy', 'LIKE', "%{$query}%");
-            });
-        }
+        $q->where(function ($subQ) use ($query) {
+            $subQ->where('NIK', 'LIKE', "%{$query}%")
+                 ->orWhere('PatientID_Provider', 'LIKE', "%{$query}%")
+                 ->orWhere('FullName', 'LIKE', "%{$query}%")
+                 ->orWhere('Sex', 'LIKE', "%{$query}%")
+                 ->orWhere('BirthDate', 'LIKE', "%{$query}%")
+                 ->orWhere('Address', 'LIKE', "%{$query}%")
+                 ->orWhere('Phone', 'LIKE', "%{$query}%")
+                 ->orWhere('CreateBy', 'LIKE', "%{$query}%")
+                 ->orWhere('LastModifiedBy', 'LIKE', "%{$query}%");
+        });
     })
     ->get();
 
@@ -90,6 +106,7 @@ public function index(Request $request)
         return [
             'ID' => $patient->ID,
             'NIK' => $patient->NIK,
+            'PatientID_Provider' => $patient->PatientID_Provider,
             'FullName' => $patient->FullName,
             'Sex' => $patient->Sex,
             'BirthDate' => $patient->BirthDate,
@@ -111,39 +128,65 @@ public function index(Request $request)
 
 
 
-    /**
-     * @OA\Post(
-     *     path="/api/pasien",
-     *     summary="Tambah data pasien baru",
-     *     description="Menambahkan pasien baru ke dalam database.",
-     *     tags={"Pasien"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"NIK", "PatientID_Provider"},
-     *             @OA\Property(property="NIK", type="string", example="1234567890123456"),
-     *             @OA\Property(property="PatientID_Provider", type="string", example="P-001"),
-     *             @OA\Property(property="FullName", type="string", example="John Doe"),
-     *             @OA\Property(property="Sex", type="string", enum={"M", "F"}, example="M"),
-     *             @OA\Property(property="BirthDate", type="string", format="date", example="1990-01-01"),
-     *             @OA\Property(property="Address", type="string", example="Jl. Contoh No.1"),
-     *             @OA\Property(property="Phone", type="string", example="081234567890"),
-     *             @OA\Property(property="CreateBy", type="string", example="admin"),
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="Pasien berhasil ditambahkan",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(property="message", type="string", example="Patient created successfully"),
-     *             @OA\Property(property="data", ref="#/components/schemas/Patient")
-     *         )
-     *     ),
-     *     @OA\Response(response=400, description="Bad request")
-     * )
-     */
-    public function store(Request $request)
+   /**
+ * @OA\Post(
+ *     path="/api/pasien",
+ *     summary="Tambah data pasien baru", 
+ *     description="Menambahkan pasien baru ke dalam database.",
+ *     tags={"Pasien"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent( 
+ *             required={"NIK", "PatientID_Provider"},
+ *             @OA\Property(property="NIK", type="string", example="1234567890123456"),
+ *             @OA\Property(property="PatientID_Provider", type="string", example="P-001"),
+ *             @OA\Property(property="FullName", type="string", example="John Doe"),
+ *             @OA\Property(property="Sex", type="string", enum={"M", "F"}, example="M"),
+ *             @OA\Property(property="BirthDate", type="string", format="date", example="1990-01-01"),
+ *             @OA\Property(property="Address", type="string", example="Jl. Contoh No.1"),
+ *             @OA\Property(property="Phone", type="string", example="081234567890"),
+ *             @OA\Property(property="CreateBy", type="string", example="admin"),
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=201,
+ *         description="Pasien berhasil ditambahkan",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Patient record created successfully"),
+ *             @OA\Property(property="data", type="object",
+ *                 @OA\Property(property="ID", type="integer", example=1),
+ *                 @OA\Property(property="NIK", type="string", example="1234567890123456"),
+ *                 @OA\Property(property="PatientID_Provider", type="string", example="P-001"),
+ *                 @OA\Property(property="FullName", type="string", example="John Doe"),
+ *                 @OA\Property(property="Sex", type="string", example="M"),
+ *                 @OA\Property(property="BirthDate", type="string", format="date", example="1990-01-01"),
+ *                 @OA\Property(property="Address", type="string", example="Jl. Contoh No.1"),
+ *                 @OA\Property(property="Phone", type="string", example="081234567890"),
+ *                 @OA\Property(property="CreateDate", type="string", format="date-time", example="2025-02-07 10:00:00"),
+ *                 @OA\Property(property="CreateBy", type="string", example="admin")
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Bad request",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Validation error"),
+ *             @OA\Property(property="errors", type="object",
+ *                 @OA\Property(property="NIK", type="array", 
+ *                     @OA\Items(type="string", example="The NIK field is required.")
+ *                 ),
+ *                 @OA\Property(property="PatientID_Provider", type="array", 
+ *                     @OA\Items(type="string", example="The PatientID_Provider field is required.")
+ *                 )
+ *             )
+ *         )
+ *     )
+ * )
+ */
+public function store(Request $request)
 {
     $validated = $request->validate([
         'NIK' => 'required|string|size:16|unique:Patient,NIK',
@@ -162,7 +205,7 @@ public function index(Request $request)
     date_default_timezone_set('Asia/Jakarta');
     
     // Pastikan gcrecord selalu false atau 0
-    $validated['gcrecord'] = false; // atau gunakan `0` jika di database berupa integer
+    $validated['gcrecord'] = 0;
     $validated['CreateDate'] = now()->toDateTimeString();
 
     $patient = Patient::create($validated);
@@ -179,7 +222,7 @@ public function index(Request $request)
             'BirthDate' => $patient->BirthDate,
             'Address' => $patient->Address,
             'Phone' => $patient->Phone,
-            'CreateDate' => !empty($patient->CreateDate) ? Carbon::parse($patient->CreateDate)->format('Y-m-d H:i:s') : now()->format('Y-m-d H:i:s'),
+            'CreateDate' => !empty($patient->CreateDate) ? \Carbon\Carbon::parse($patient->CreateDate)->format('Y-m-d H:i:s') : now()->format('Y-m-d H:i:s'),
             'CreateBy' => $patient->CreateBy,
         ]
     ], 201);
@@ -188,44 +231,62 @@ public function index(Request $request)
 
 
 
-       /**
-     * @OA\Put(
-     *     path="/api/pasien/{id}",
-     *     summary="Perbarui data pasien yang ada",
-     *     description="Memperbarui informasi pasien berdasarkan ID yang diberikan.",
-     *     tags={"Pasien"},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         description="ID pasien yang akan diperbarui",
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"FullName", "Sex", "BirthDate", "Address", "Phone", "LastModifiedBy"},
-     *             @OA\Property(property="FullName", type="string", example="Jane Doe"),
-     *             @OA\Property(property="Sex", type="string", enum={"M", "F"}, example="F"),
-     *             @OA\Property(property="BirthDate", type="string", format="date", example="1995-05-15"),
-     *             @OA\Property(property="Address", type="string", example="Jl. Contoh No.2"),
-     *             @OA\Property(property="Phone", type="string", example="081298765432"),
-     *             @OA\Property(property="LastModifiedBy", type="string", example="admin"),
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Pasien berhasil diperbarui",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(property="message", type="string", example="Patient updated successfully"),
-     *             @OA\Property(property="data", ref="#/components/schemas/Patient")
-     *         )
-     *     ),
-     *     @OA\Response(response=404, description="Pasien tidak ditemukan")
-     * )
-     */
-    public function update(Request $request, $id)
+
+      /**
+ * @OA\Put(
+ *     path="/api/pasien/{id}",
+ *     summary="Perbarui data pasien yang ada",
+ *     description="Memperbarui informasi pasien berdasarkan ID yang diberikan.",
+ *     tags={"Pasien"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID pasien yang akan diperbarui",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={"FullName", "Sex", "BirthDate", "Address", "Phone", "LastModifiedBy"},
+ *             @OA\Property(property="FullName", type="string", example="Jane Doe"),
+ *             @OA\Property(property="Sex", type="string", enum={"M", "F"}, example="F"),
+ *             @OA\Property(property="BirthDate", type="string", format="date", example="1995-05-15"),
+ *             @OA\Property(property="Address", type="string", example="Jl. Contoh No.2"),
+ *             @OA\Property(property="Phone", type="string", example="081298765432"),
+ *             @OA\Property(property="LastModifiedBy", type="string", example="admin")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Pasien berhasil diperbarui",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Patient updated successfully"),
+ *             @OA\Property(property="data", type="object",
+ *                 @OA\Property(property="ID", type="integer", example=1),
+ *                 @OA\Property(property="NIK", type="string", example="1234567890123456"),
+ *                 @OA\Property(property="FullName", type="string", example="Jane Doe"),
+ *                 @OA\Property(property="Sex", type="string", example="F"),
+ *                 @OA\Property(property="BirthDate", type="string", format="date", example="1995-05-15"),
+ *                 @OA\Property(property="Address", type="string", example="Jl. Contoh No.2"),
+ *                 @OA\Property(property="Phone", type="string", example="081298765432"),
+ *                 @OA\Property(property="LastModifiedDate", type="string", format="date-time", example="2025-02-07 12:30:00"),
+ *                 @OA\Property(property="LastModifiedBy", type="string", example="admin")
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Pasien tidak ditemukan",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Patient not found")
+ *         )
+ *     )
+ * )
+ */
+public function update(Request $request, $id)
 {
     $patient = Patient::where('ID', $id)->where('gcrecord', 0)->first();
 
@@ -251,14 +312,18 @@ public function index(Request $request)
     $patient->update($validatedData);
 
     return response()->json([
-        'ID' => $patient->ID,
-        'FullName' => $patient->FullName,
-        'Sex' => $patient->Sex,
-        'BirthDate' => $patient->BirthDate,
-        'Address' => $patient->Address,
-        'Phone' => $patient->Phone,
-        'LastModifiedDate' => $patient->LastModifiedDate ?? now()->format('Y-m-d H:i:s'),
-        'LastModifiedBy' => $patient->LastModifiedBy,
+        'message' => 'Patient updated successfully',
+        'data' => [
+            'ID' => $patient->ID,
+            'NIK' => $patient->NIK,
+            'FullName' => $patient->FullName,
+            'Sex' => $patient->Sex,
+            'BirthDate' => $patient->BirthDate,
+            'Address' => $patient->Address,
+            'Phone' => $patient->Phone,
+            'LastModifiedDate' => $patient->LastModifiedDate ?? now()->format('Y-m-d H:i:s'),
+            'LastModifiedBy' => $patient->LastModifiedBy,
+        ]
     ], 200);
 }
 }

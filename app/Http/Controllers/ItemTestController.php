@@ -123,7 +123,7 @@ public function store(Request $request)
     // Validasi input
     $validated = $request->validate([
         'ItemTestCode' => 'required|string|max:10|unique:Item_Test,ItemTestCode', // Validasi unik
-        'ItemTestName' => 'required|string|max:30',
+        'ItemTestName' => 'required|string|max:100',
         'Group' => 'nullable|string|max:30',
         'SubGroup' => 'nullable|string|max:30',
         'Descriptions' => 'nullable|string|max:250',
@@ -184,6 +184,7 @@ public function store(Request $request)
  *         required=true,
  *         @OA\JsonContent(
  *             required={"ItemTestCode", "ItemTestName"},
+ *             @OA\Property(property="ItemTestCode", type="string", example="HB123"),
  *             @OA\Property(property="ItemTestName", type="string", example="Test Hemoglobin"),
  *             @OA\Property(property="Group", type="string", example="Hematologi"),
  *             @OA\Property(property="SubGroup", type="string", example="Darah"),
@@ -197,13 +198,23 @@ public function store(Request $request)
  *         @OA\JsonContent(
  *             type="object",
  *             @OA\Property(property="message", type="string", example="Item updated successfully"),
- *             @OA\Property(property="data", ref="#/components/schemas/ItemTest")
+ *             @OA\Property(property="data", type="object",
+ *                 @OA\Property(property="ID", type="integer", example=1),
+ *                 @OA\Property(property="ItemTestCode", type="string", example="HB123"),
+ *                 @OA\Property(property="ItemTestName", type="string", example="Test Hemoglobin"),
+ *                 @OA\Property(property="Group", type="string", example="Hematologi"),
+ *                 @OA\Property(property="SubGroup", type="string", example="Darah"),
+ *                 @OA\Property(property="Descriptions", type="string", example="Tes kadar hemoglobin dalam darah"),
+ *                 @OA\Property(property="LastModifiedDate", type="string", format="date-time", example="2025-02-07 10:00:00"),
+ *                 @OA\Property(property="LastModifiedBy", type="string", example="admin")
+ *             )
  *         )
  *     ),
  *     @OA\Response(response=404, description="Item Test tidak ditemukan"),
  *     @OA\Response(response=400, description="Bad request")
  * )
  */
+
 public function update(Request $request, $id)
 {
     // Cari item berdasarkan ID
@@ -215,7 +226,7 @@ public function update(Request $request, $id)
 
     $validated = $request->validate([
         'ItemTestCode' => 'string|max:10',
-        'ItemTestName' => 'required|string|max:30',
+        'ItemTestName' => 'required|string|max:225',
         'Group' => 'nullable|string|max:30',
         'SubGroup' => 'nullable|string|max:30',
         'Descriptions' => 'nullable|string|max:250',

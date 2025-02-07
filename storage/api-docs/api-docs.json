@@ -151,6 +151,10 @@
                                     "ItemTestName"
                                 ],
                                 "properties": {
+                                    "ItemTestCode": {
+                                        "type": "string",
+                                        "example": "HB123"
+                                    },
                                     "ItemTestName": {
                                         "type": "string",
                                         "example": "Test Hemoglobin"
@@ -189,7 +193,42 @@
                                             "example": "Item updated successfully"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/ItemTest"
+                                            "properties": {
+                                                "ID": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "ItemTestCode": {
+                                                    "type": "string",
+                                                    "example": "HB123"
+                                                },
+                                                "ItemTestName": {
+                                                    "type": "string",
+                                                    "example": "Test Hemoglobin"
+                                                },
+                                                "Group": {
+                                                    "type": "string",
+                                                    "example": "Hematologi"
+                                                },
+                                                "SubGroup": {
+                                                    "type": "string",
+                                                    "example": "Darah"
+                                                },
+                                                "Descriptions": {
+                                                    "type": "string",
+                                                    "example": "Tes kadar hemoglobin dalam darah"
+                                                },
+                                                "LastModifiedDate": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-02-07 10:00:00"
+                                                },
+                                                "LastModifiedBy": {
+                                                    "type": "string",
+                                                    "example": "admin"
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -235,167 +274,18 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "A list of Lab Trans (filtered by ID or query)",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/LabTrans"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            "post": {
-                "tags": [
-                    "Lab Trans"
-                ],
-                "summary": "Create a new Lab Transaction",
-                "operationId": "510798dffe17c56ee3229597ad9301d3",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "LabNumber",
-                                    "LabTest",
-                                    "TransDate",
-                                    "NIK"
-                                ],
-                                "properties": {
-                                    "LabNumber": {
-                                        "type": "string",
-                                        "example": "LAB-12345"
-                                    },
-                                    "LabTest": {
-                                        "type": "string",
-                                        "example": "Blood Test"
-                                    },
-                                    "TransDate": {
-                                        "type": "string",
-                                        "format": "date",
-                                        "example": "2024-09-06"
-                                    },
-                                    "DoctorReferral": {
-                                        "type": "string",
-                                        "example": "Dr. John Doe"
-                                    },
-                                    "NIK": {
-                                        "type": "string",
-                                        "example": "1234567890123456"
-                                    },
-                                    "Anamnesa": {
-                                        "type": "string",
-                                        "example": "Pasien mengalami demam tinggi"
-                                    },
-                                    "BB": {
-                                        "type": "string",
-                                        "example": "70"
-                                    },
-                                    "TB": {
-                                        "type": "string",
-                                        "example": "170"
-                                    },
-                                    "LP": {
-                                        "type": "string",
-                                        "example": "80"
-                                    },
-                                    "TD": {
-                                        "type": "string",
-                                        "example": "120/80"
-                                    },
-                                    "BMI": {
-                                        "type": "string",
-                                        "example": "22.5"
-                                    },
-                                    "FinalStatement": {
-                                        "type": "string",
-                                        "example": "Sehat"
-                                    },
-                                    "FinalResult": {
-                                        "type": "string",
-                                        "example": "Normal"
-                                    },
-                                    "Status": {
-                                        "type": "string",
-                                        "example": "Completed"
-                                    },
-                                    "CreateBy": {
-                                        "type": "string",
-                                        "example": "admin"
-                                    },
-                                    "Lab_Trans_Details": {
-                                        "type": "array",
-                                        "items": {
-                                            "properties": {
-                                                "ItemTestID": {
-                                                    "type": "integer",
-                                                    "example": 101
-                                                },
-                                                "ResultValue": {
-                                                    "type": "string",
-                                                    "example": "5.4"
-                                                },
-                                                "Unit": {
-                                                    "type": "string",
-                                                    "example": "mmol/L"
-                                                },
-                                                "ReferenceValue": {
-                                                    "type": "string",
-                                                    "example": "3.9-6.1"
-                                                },
-                                                "ResultNotes": {
-                                                    "type": "string",
-                                                    "example": "Normal"
-                                                },
-                                                "CreateBy": {
-                                                    "type": "string",
-                                                    "example": "admin"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "Lab_Trans_Others": {
-                                        "type": "array",
-                                        "items": {
-                                            "properties": {
-                                                "SupportServiceID": {
-                                                    "type": "integer",
-                                                    "example": 201
-                                                },
-                                                "SupportServiceNotes": {
-                                                    "type": "string",
-                                                    "example": "Rontgen dada dilakukan"
-                                                },
-                                                "CreateBy": {
-                                                    "type": "string",
-                                                    "example": "admin"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Data berhasil disimpan",
+                        "description": "Successful operation",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Data berhasil disimpan"
+                                            "example": "Data berhasil diambil"
+                                        },
+                                        "totaldata": {
+                                            "type": "integer",
+                                            "example": 5
                                         },
                                         "data": {
                                             "properties": {
@@ -416,9 +306,9 @@
                                                     "format": "date",
                                                     "example": "2024-09-06"
                                                 },
-                                                "NIK": {
+                                                "DoctorReferral": {
                                                     "type": "string",
-                                                    "example": "1234567890123456"
+                                                    "example": "Dr. John Doe"
                                                 },
                                                 "Age": {
                                                     "type": "integer",
@@ -481,6 +371,116 @@
                                                         }
                                                     },
                                                     "type": "object"
+                                                },
+                                                "Lab_Trans_Details": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "ID": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "ItemTestID": {
+                                                                "type": "integer",
+                                                                "example": 101
+                                                            },
+                                                            "ItemTestCode": {
+                                                                "type": "string",
+                                                                "example": "T-001"
+                                                            },
+                                                            "ItemTestName": {
+                                                                "type": "string",
+                                                                "example": "Hemoglobin Test"
+                                                            },
+                                                            "Group": {
+                                                                "type": "string",
+                                                                "example": "Hematology"
+                                                            },
+                                                            "SubGroup": {
+                                                                "type": "string",
+                                                                "example": "Blood"
+                                                            },
+                                                            "Descriptions": {
+                                                                "type": "string",
+                                                                "example": "Test for hemoglobin level"
+                                                            },
+                                                            "ResultValue": {
+                                                                "type": "string",
+                                                                "example": "5.4"
+                                                            },
+                                                            "Unit": {
+                                                                "type": "string",
+                                                                "example": "mmol/L"
+                                                            },
+                                                            "ReferenceValue": {
+                                                                "type": "string",
+                                                                "example": "3.9-6.1"
+                                                            },
+                                                            "ResultNotes": {
+                                                                "type": "string",
+                                                                "example": "Normal"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "Lab_Trans_Others": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "ID": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "SupportServiceID": {
+                                                                "type": "integer",
+                                                                "example": 201
+                                                            },
+                                                            "SupportServiceCode": {
+                                                                "type": "string",
+                                                                "example": "SS-001"
+                                                            },
+                                                            "SupportServiceName": {
+                                                                "type": "string",
+                                                                "example": "Radiology"
+                                                            },
+                                                            "SupportServiceNotes": {
+                                                                "type": "string",
+                                                                "example": "Rontgen dada dilakukan"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "FinalStatement": {
+                                                    "type": "string",
+                                                    "example": "Sehat"
+                                                },
+                                                "FinalResult": {
+                                                    "type": "string",
+                                                    "example": "Normal"
+                                                },
+                                                "Status": {
+                                                    "type": "string",
+                                                    "example": "Completed"
+                                                },
+                                                "CreateDate": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-02-07 10:00:00"
+                                                },
+                                                "CreateBy": {
+                                                    "type": "string",
+                                                    "example": "admin"
+                                                },
+                                                "LastModifiedDate": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-02-07 10:00:00"
+                                                },
+                                                "LastModifiedBy": {
+                                                    "type": "string",
+                                                    "example": "admin"
                                                 }
                                             },
                                             "type": "object"
@@ -490,25 +490,375 @@
                                 }
                             }
                         }
-                    },
-                    "400": {
-                        "description": "Bad Request",
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Lab Trans"
+                ],
+                "summary": "Create a new Lab Transaction",
+                "operationId": "510798dffe17c56ee3229597ad9301d3",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "LabNumber",
+                                    "LabTest",
+                                    "TransDate",
+                                    "PatientID"
+                                ],
+                                "properties": {
+                                    "LabNumber": {
+                                        "type": "string",
+                                        "example": "LAB-12345"
+                                    },
+                                    "LabTest": {
+                                        "type": "string",
+                                        "example": "Blood Test"
+                                    },
+                                    "TransDate": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2024-09-06"
+                                    },
+                                    "DoctorReferral": {
+                                        "type": "string",
+                                        "example": "Dr. John Doe"
+                                    },
+                                    "NIK": {
+                                        "type": "string",
+                                        "example": "1234567890123456"
+                                    },
+                                    "Anamnesa": {
+                                        "type": "string",
+                                        "example": "Pasien mengalami demam tinggi"
+                                    },
+                                    "BB": {
+                                        "type": "string",
+                                        "example": "70"
+                                    },
+                                    "TB": {
+                                        "type": "string",
+                                        "example": "170"
+                                    },
+                                    "LP": {
+                                        "type": "string",
+                                        "example": "80"
+                                    },
+                                    "TD": {
+                                        "type": "string",
+                                        "example": "120/80"
+                                    },
+                                    "BMI": {
+                                        "type": "string",
+                                        "example": "22.5"
+                                    },
+                                    "Lab_Trans_Details": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "ID": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "ItemTestID": {
+                                                    "type": "integer",
+                                                    "example": 101
+                                                },
+                                                "ItemTestCode": {
+                                                    "type": "string",
+                                                    "example": "T-001"
+                                                },
+                                                "ItemTestName": {
+                                                    "type": "string",
+                                                    "example": "Hemoglobin Test"
+                                                },
+                                                "Group": {
+                                                    "type": "string",
+                                                    "example": "Hematology"
+                                                },
+                                                "SubGroup": {
+                                                    "type": "string",
+                                                    "example": "Blood"
+                                                },
+                                                "Descriptions": {
+                                                    "type": "string",
+                                                    "example": "Test for hemoglobin level"
+                                                },
+                                                "ResultValue": {
+                                                    "type": "string",
+                                                    "example": "5.4"
+                                                },
+                                                "Unit": {
+                                                    "type": "string",
+                                                    "example": "mmol/L"
+                                                },
+                                                "ReferenceValue": {
+                                                    "type": "string",
+                                                    "example": "3.9-6.1"
+                                                },
+                                                "ResultNotes": {
+                                                    "type": "string",
+                                                    "example": "Normal"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "Lab_Trans_Others": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "ID": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "SupportServiceID": {
+                                                    "type": "integer",
+                                                    "example": 201
+                                                },
+                                                "SupportServiceCode": {
+                                                    "type": "string",
+                                                    "example": "SS-001"
+                                                },
+                                                "SupportServiceName": {
+                                                    "type": "string",
+                                                    "example": "Radiology"
+                                                },
+                                                "SupportServiceNotes": {
+                                                    "type": "string",
+                                                    "example": "Rontgen dada dilakukan"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "FinalStatement": {
+                                        "type": "string",
+                                        "example": "Sehat"
+                                    },
+                                    "FinalResult": {
+                                        "type": "string",
+                                        "example": "Normal"
+                                    },
+                                    "Status": {
+                                        "type": "string",
+                                        "example": "Completed"
+                                    },
+                                    "CreateDate": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2025-02-07 10:00:00"
+                                    },
+                                    "CreateBy": {
+                                        "type": "string",
+                                        "example": "admin"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Data berhasil disimpan",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "NIK tidak ditemukan dalam database pasien"
+                                            "example": "Data berhasil disimpan"
                                         },
-                                        "errors": {
+                                        "data": {
                                             "properties": {
-                                                "NIK": {
+                                                "ID": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "LabNumber": {
+                                                    "type": "string",
+                                                    "example": "LAB-12345"
+                                                },
+                                                "LabTest": {
+                                                    "type": "string",
+                                                    "example": "Blood Test"
+                                                },
+                                                "TransDate": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2024-09-06"
+                                                },
+                                                "DoctorReferral": {
+                                                    "type": "string",
+                                                    "example": "Dr. John Doe"
+                                                },
+                                                "Age": {
+                                                    "type": "integer",
+                                                    "example": 30
+                                                },
+                                                "Anamnesa": {
+                                                    "type": "string",
+                                                    "example": "Pasien mengalami demam tinggi"
+                                                },
+                                                "BB": {
+                                                    "type": "string",
+                                                    "example": "70"
+                                                },
+                                                "TB": {
+                                                    "type": "string",
+                                                    "example": "170"
+                                                },
+                                                "LP": {
+                                                    "type": "string",
+                                                    "example": "80"
+                                                },
+                                                "TD": {
+                                                    "type": "string",
+                                                    "example": "120/80"
+                                                },
+                                                "BMI": {
+                                                    "type": "string",
+                                                    "example": "22.5"
+                                                },
+                                                "patient": {
+                                                    "properties": {
+                                                        "ID": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "NIK": {
+                                                            "type": "string",
+                                                            "example": "1234567890123456"
+                                                        },
+                                                        "FullName": {
+                                                            "type": "string",
+                                                            "example": "John Doe"
+                                                        },
+                                                        "Sex": {
+                                                            "type": "string",
+                                                            "example": "Male"
+                                                        },
+                                                        "BirthDate": {
+                                                            "type": "string",
+                                                            "format": "date",
+                                                            "example": "1994-05-12"
+                                                        },
+                                                        "Address": {
+                                                            "type": "string",
+                                                            "example": "Jl. Merdeka No. 10, Jakarta"
+                                                        },
+                                                        "Phone": {
+                                                            "type": "string",
+                                                            "example": "08123456789"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "Lab_Trans_Details": {
                                                     "type": "array",
                                                     "items": {
-                                                        "type": "string",
-                                                        "example": "NIK tidak terdaftar"
+                                                        "properties": {
+                                                            "ID": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "ItemTestID": {
+                                                                "type": "integer",
+                                                                "example": 101
+                                                            },
+                                                            "ItemTestCode": {
+                                                                "type": "string",
+                                                                "example": "T-001"
+                                                            },
+                                                            "ItemTestName": {
+                                                                "type": "string",
+                                                                "example": "Hemoglobin Test"
+                                                            },
+                                                            "Group": {
+                                                                "type": "string",
+                                                                "example": "Hematology"
+                                                            },
+                                                            "SubGroup": {
+                                                                "type": "string",
+                                                                "example": "Blood"
+                                                            },
+                                                            "Descriptions": {
+                                                                "type": "string",
+                                                                "example": "Test for hemoglobin level"
+                                                            },
+                                                            "ResultValue": {
+                                                                "type": "string",
+                                                                "example": "5.4"
+                                                            },
+                                                            "Unit": {
+                                                                "type": "string",
+                                                                "example": "mmol/L"
+                                                            },
+                                                            "ReferenceValue": {
+                                                                "type": "string",
+                                                                "example": "3.9-6.1"
+                                                            },
+                                                            "ResultNotes": {
+                                                                "type": "string",
+                                                                "example": "Normal"
+                                                            }
+                                                        },
+                                                        "type": "object"
                                                     }
+                                                },
+                                                "Lab_Trans_Others": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "ID": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "SupportServiceID": {
+                                                                "type": "integer",
+                                                                "example": 201
+                                                            },
+                                                            "SupportServiceCode": {
+                                                                "type": "string",
+                                                                "example": "SS-001"
+                                                            },
+                                                            "SupportServiceName": {
+                                                                "type": "string",
+                                                                "example": "Radiology"
+                                                            },
+                                                            "SupportServiceNotes": {
+                                                                "type": "string",
+                                                                "example": "Rontgen dada dilakukan"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "FinalStatement": {
+                                                    "type": "string",
+                                                    "example": "Sehat"
+                                                },
+                                                "FinalResult": {
+                                                    "type": "string",
+                                                    "example": "Normal"
+                                                },
+                                                "Status": {
+                                                    "type": "string",
+                                                    "example": "Completed"
+                                                },
+                                                "CreateDate": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-02-07 10:00:00"
+                                                },
+                                                "CreateBy": {
+                                                    "type": "string",
+                                                    "example": "admin"
                                                 }
                                             },
                                             "type": "object"
@@ -653,6 +1003,40 @@
                                                     "type": "string",
                                                     "example": "Dr. John Doe"
                                                 },
+                                                "patient": {
+                                                    "properties": {
+                                                        "ID": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "NIK": {
+                                                            "type": "string",
+                                                            "example": "123456789"
+                                                        },
+                                                        "FullName": {
+                                                            "type": "string",
+                                                            "example": "John Doe"
+                                                        },
+                                                        "Sex": {
+                                                            "type": "string",
+                                                            "example": "Male"
+                                                        },
+                                                        "BirthDate": {
+                                                            "type": "string",
+                                                            "format": "date",
+                                                            "example": "1994-09-06"
+                                                        },
+                                                        "Address": {
+                                                            "type": "string",
+                                                            "example": "Jakarta, Indonesia"
+                                                        },
+                                                        "Phone": {
+                                                            "type": "string",
+                                                            "example": "081234567890"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
                                                 "Age": {
                                                     "type": "string",
                                                     "example": "30"
@@ -693,47 +1077,14 @@
                                                     "type": "string",
                                                     "example": "Completed"
                                                 },
+                                                "LastModifiedDate": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-02-07 10:00:00"
+                                                },
                                                 "LastModifiedBy": {
                                                     "type": "string",
                                                     "example": "admin"
-                                                },
-                                                "patient": {
-                                                    "properties": {
-                                                        "ID": {
-                                                            "type": "integer",
-                                                            "example": 1
-                                                        },
-                                                        "NIK": {
-                                                            "type": "string",
-                                                            "example": "123456789"
-                                                        },
-                                                        "FullName": {
-                                                            "type": "string",
-                                                            "example": "John Doe"
-                                                        },
-                                                        "Sex": {
-                                                            "type": "string",
-                                                            "example": "Male"
-                                                        },
-                                                        "BirthDate": {
-                                                            "type": "string",
-                                                            "format": "date",
-                                                            "example": "1994-09-06"
-                                                        },
-                                                        "Address": {
-                                                            "type": "string",
-                                                            "example": "Jakarta, Indonesia"
-                                                        },
-                                                        "Phone": {
-                                                            "type": "string",
-                                                            "example": "081234567890"
-                                                        },
-                                                        "LastModifiedBy": {
-                                                            "type": "string",
-                                                            "example": "admin"
-                                                        }
-                                                    },
-                                                    "type": "object"
                                                 }
                                             },
                                             "type": "object"
@@ -786,16 +1137,124 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/LabTransDetail"
-                                    }
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Data berhasil diambil"
+                                        },
+                                        "totaldata": {
+                                            "type": "integer",
+                                            "example": 10
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "ID": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "LabTransID": {
+                                                        "type": "integer",
+                                                        "example": 101
+                                                    },
+                                                    "ItemTestID": {
+                                                        "type": "integer",
+                                                        "example": 201
+                                                    },
+                                                    "itemTest": {
+                                                        "properties": {
+                                                            "ItemTestCode": {
+                                                                "type": "string",
+                                                                "example": "T-001"
+                                                            },
+                                                            "ItemTestName": {
+                                                                "type": "string",
+                                                                "example": "Hemoglobin Test"
+                                                            },
+                                                            "Group": {
+                                                                "type": "string",
+                                                                "example": "Hematology"
+                                                            },
+                                                            "SubGroup": {
+                                                                "type": "string",
+                                                                "example": "Blood"
+                                                            },
+                                                            "Descriptions": {
+                                                                "type": "string",
+                                                                "example": "Test for hemoglobin level"
+                                                            }
+                                                        },
+                                                        "type": "object",
+                                                        "nullable": true
+                                                    },
+                                                    "ResultValue": {
+                                                        "type": "string",
+                                                        "example": "5.4"
+                                                    },
+                                                    "Unit": {
+                                                        "type": "string",
+                                                        "example": "mmol/L"
+                                                    },
+                                                    "ReferenceValue": {
+                                                        "type": "string",
+                                                        "example": "3.9-6.1"
+                                                    },
+                                                    "ResultNotes": {
+                                                        "type": "string",
+                                                        "example": "Normal"
+                                                    },
+                                                    "CreateDate": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-02-07 10:00:00"
+                                                    },
+                                                    "CreateBy": {
+                                                        "type": "string",
+                                                        "example": "admin"
+                                                    },
+                                                    "LastModifiedDate": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-02-08 12:00:00"
+                                                    },
+                                                    "LastModifiedBy": {
+                                                        "type": "string",
+                                                        "example": "editor"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
                     },
                     "404": {
-                        "description": "Data not found"
+                        "description": "Data not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Data not found"
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 0
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {}
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -846,18 +1305,90 @@
                     }
                 },
                 "responses": {
-                    "201": {
-                        "description": "Data berhasil disimpan",
+                    "200": {
+                        "description": "Filtered list of Lab Trans",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Data berhasil disimpan"
+                                            "example": "Data berhasil diambil"
+                                        },
+                                        "totaldata": {
+                                            "type": "integer",
+                                            "example": 10
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/LabTransDetail"
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "ID": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "LabTransID": {
+                                                        "type": "integer",
+                                                        "example": 101
+                                                    },
+                                                    "ItemTestID": {
+                                                        "type": "integer",
+                                                        "example": 201
+                                                    },
+                                                    "itemTest": {
+                                                        "properties": {
+                                                            "ItemTestCode": {
+                                                                "type": "string",
+                                                                "example": "T-001"
+                                                            },
+                                                            "ItemTestName": {
+                                                                "type": "string",
+                                                                "example": "Hemoglobin Test"
+                                                            },
+                                                            "Group": {
+                                                                "type": "string",
+                                                                "example": "Hematology"
+                                                            },
+                                                            "SubGroup": {
+                                                                "type": "string",
+                                                                "example": "Blood"
+                                                            },
+                                                            "Descriptions": {
+                                                                "type": "string",
+                                                                "example": "Test for hemoglobin level"
+                                                            }
+                                                        },
+                                                        "type": "object",
+                                                        "nullable": true
+                                                    },
+                                                    "ResultValue": {
+                                                        "type": "string",
+                                                        "example": "5.4"
+                                                    },
+                                                    "Unit": {
+                                                        "type": "string",
+                                                        "example": "mmol/L"
+                                                    },
+                                                    "ReferenceValue": {
+                                                        "type": "string",
+                                                        "example": "3.9-6.1"
+                                                    },
+                                                    "ResultNotes": {
+                                                        "type": "string",
+                                                        "example": "Normal"
+                                                    },
+                                                    "CreateDate": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-02-07 10:00:00"
+                                                    },
+                                                    "CreateBy": {
+                                                        "type": "string",
+                                                        "example": "admin"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
                                         }
                                     },
                                     "type": "object"
@@ -931,17 +1462,89 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Data updated successfully",
+                        "description": "Filtered list of Lab Trans",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Data updated successfully"
+                                            "example": "Data berhasil diambil"
+                                        },
+                                        "totaldata": {
+                                            "type": "integer",
+                                            "example": 10
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/LabTransDetail"
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "ID": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "LabTransID": {
+                                                        "type": "integer",
+                                                        "example": 101
+                                                    },
+                                                    "ItemTestID": {
+                                                        "type": "integer",
+                                                        "example": 201
+                                                    },
+                                                    "itemTest": {
+                                                        "properties": {
+                                                            "ItemTestCode": {
+                                                                "type": "string",
+                                                                "example": "T-001"
+                                                            },
+                                                            "ItemTestName": {
+                                                                "type": "string",
+                                                                "example": "Hemoglobin Test"
+                                                            },
+                                                            "Group": {
+                                                                "type": "string",
+                                                                "example": "Hematology"
+                                                            },
+                                                            "SubGroup": {
+                                                                "type": "string",
+                                                                "example": "Blood"
+                                                            },
+                                                            "Descriptions": {
+                                                                "type": "string",
+                                                                "example": "Test for hemoglobin level"
+                                                            }
+                                                        },
+                                                        "type": "object",
+                                                        "nullable": true
+                                                    },
+                                                    "ResultValue": {
+                                                        "type": "string",
+                                                        "example": "5.4"
+                                                    },
+                                                    "Unit": {
+                                                        "type": "string",
+                                                        "example": "mmol/L"
+                                                    },
+                                                    "ReferenceValue": {
+                                                        "type": "string",
+                                                        "example": "3.9-6.1"
+                                                    },
+                                                    "ResultNotes": {
+                                                        "type": "string",
+                                                        "example": "Normal"
+                                                    },
+                                                    "LastModifiedDate": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-02-08 12:00:00"
+                                                    },
+                                                    "LastModifiedBy": {
+                                                        "type": "string",
+                                                        "example": "editor"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
                                         }
                                     },
                                     "type": "object"
@@ -988,16 +1591,104 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/LabTransOther"
-                                    }
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Data berhasil diambil"
+                                        },
+                                        "totaldata": {
+                                            "type": "integer",
+                                            "example": 5
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "ID": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "LabTransID": {
+                                                        "type": "integer",
+                                                        "example": 101
+                                                    },
+                                                    "SupportServiceID": {
+                                                        "type": "integer",
+                                                        "example": 201
+                                                    },
+                                                    "SupportService": {
+                                                        "properties": {
+                                                            "SupportServiceCode": {
+                                                                "type": "string",
+                                                                "example": "SS-001"
+                                                            },
+                                                            "SupportServiceName": {
+                                                                "type": "string",
+                                                                "example": "Radiology"
+                                                            },
+                                                            "Descriptions": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            }
+                                                        },
+                                                        "type": "object",
+                                                        "nullable": true
+                                                    },
+                                                    "SupportServiceNotes": {
+                                                        "type": "string",
+                                                        "example": "Rontgen dada dilakukan"
+                                                    },
+                                                    "CreateDate": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-02-07 10:00:00"
+                                                    },
+                                                    "CreateBy": {
+                                                        "type": "string",
+                                                        "example": "admin"
+                                                    },
+                                                    "LastModifiedDate": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-02-08 12:00:00"
+                                                    },
+                                                    "LastModifiedBy": {
+                                                        "type": "string",
+                                                        "example": "editor"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
                     },
                     "404": {
-                        "description": "Data not found"
+                        "description": "Data not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Data not found"
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 0
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {}
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -1042,12 +1733,65 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Data berhasil disimpan"
-                                        },
                                         "data": {
-                                            "$ref": "#/components/schemas/LabTransOther"
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "ID": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "LabTransID": {
+                                                        "type": "integer",
+                                                        "example": 101
+                                                    },
+                                                    "SupportServiceID": {
+                                                        "type": "integer",
+                                                        "example": 201
+                                                    },
+                                                    "SupportService": {
+                                                        "properties": {
+                                                            "SupportServiceCode": {
+                                                                "type": "string",
+                                                                "example": "SS-001"
+                                                            },
+                                                            "SupportServiceName": {
+                                                                "type": "string",
+                                                                "example": "Radiology"
+                                                            },
+                                                            "Descriptions": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            }
+                                                        },
+                                                        "type": "object",
+                                                        "nullable": true
+                                                    },
+                                                    "SupportServiceNotes": {
+                                                        "type": "string",
+                                                        "example": "Rontgen dada dilakukan"
+                                                    },
+                                                    "CreateDate": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-02-07 10:00:00"
+                                                    },
+                                                    "CreateBy": {
+                                                        "type": "string",
+                                                        "example": "admin"
+                                                    },
+                                                    "LastModifiedDate": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-02-08 12:00:00"
+                                                    },
+                                                    "LastModifiedBy": {
+                                                        "type": "string",
+                                                        "example": "editor"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
                                         }
                                     },
                                     "type": "object"
@@ -1104,12 +1848,74 @@
                     }
                 },
                 "responses": {
-                    "200": {
-                        "description": "Successful operation",
+                    "201": {
+                        "description": "Data berhasil di update",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/LabTransOther"
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "ID": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "LabTransID": {
+                                                        "type": "integer",
+                                                        "example": 101
+                                                    },
+                                                    "SupportServiceID": {
+                                                        "type": "integer",
+                                                        "example": 201
+                                                    },
+                                                    "SupportService": {
+                                                        "properties": {
+                                                            "SupportServiceCode": {
+                                                                "type": "string",
+                                                                "example": "SS-001"
+                                                            },
+                                                            "SupportServiceName": {
+                                                                "type": "string",
+                                                                "example": "Radiology"
+                                                            },
+                                                            "Descriptions": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            }
+                                                        },
+                                                        "type": "object",
+                                                        "nullable": true
+                                                    },
+                                                    "SupportServiceNotes": {
+                                                        "type": "string",
+                                                        "example": "Rontgen dada dilakukan"
+                                                    },
+                                                    "CreateDate": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-02-07 10:00:00"
+                                                    },
+                                                    "CreateBy": {
+                                                        "type": "string",
+                                                        "example": "admin"
+                                                    },
+                                                    "LastModifiedDate": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-02-08 12:00:00"
+                                                    },
+                                                    "LastModifiedBy": {
+                                                        "type": "string",
+                                                        "example": "editor"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
@@ -1154,16 +1960,103 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/Patient"
-                                    }
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Data berhasil diambil"
+                                        },
+                                        "totaldata": {
+                                            "type": "integer",
+                                            "example": 2
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "ID": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "NIK": {
+                                                        "type": "string",
+                                                        "example": "3201010101010001"
+                                                    },
+                                                    "PatientID_Provider": {
+                                                        "type": "string",
+                                                        "example": "PAT-001"
+                                                    },
+                                                    "FullName": {
+                                                        "type": "string",
+                                                        "example": "Budi Santoso"
+                                                    },
+                                                    "Sex": {
+                                                        "type": "string",
+                                                        "example": "Laki-laki"
+                                                    },
+                                                    "BirthDate": {
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "example": "1990-05-15"
+                                                    },
+                                                    "Phone": {
+                                                        "type": "string",
+                                                        "example": "+628123456789"
+                                                    },
+                                                    "Address": {
+                                                        "type": "string",
+                                                        "example": "Jl. Sudirman No. 45, Jakarta"
+                                                    },
+                                                    "CreateDate": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-02-07 10:00:00"
+                                                    },
+                                                    "CreateBy": {
+                                                        "type": "string",
+                                                        "example": "admin"
+                                                    },
+                                                    "LastModifiedDate": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-02-07 12:00:00"
+                                                    },
+                                                    "LastModifiedBy": {
+                                                        "type": "string",
+                                                        "example": "editor"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
                     },
                     "404": {
-                        "description": "Data tidak ditemukan"
+                        "description": "Data tidak ditemukan",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Data tidak ditemukan"
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 0
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {}
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -1236,10 +2129,54 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Patient created successfully"
+                                            "example": "Patient record created successfully"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/Patient"
+                                            "properties": {
+                                                "ID": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "NIK": {
+                                                    "type": "string",
+                                                    "example": "1234567890123456"
+                                                },
+                                                "PatientID_Provider": {
+                                                    "type": "string",
+                                                    "example": "P-001"
+                                                },
+                                                "FullName": {
+                                                    "type": "string",
+                                                    "example": "John Doe"
+                                                },
+                                                "Sex": {
+                                                    "type": "string",
+                                                    "example": "M"
+                                                },
+                                                "BirthDate": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "1990-01-01"
+                                                },
+                                                "Address": {
+                                                    "type": "string",
+                                                    "example": "Jl. Contoh No.1"
+                                                },
+                                                "Phone": {
+                                                    "type": "string",
+                                                    "example": "081234567890"
+                                                },
+                                                "CreateDate": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-02-07 10:00:00"
+                                                },
+                                                "CreateBy": {
+                                                    "type": "string",
+                                                    "example": "admin"
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -1248,7 +2185,39 @@
                         }
                     },
                     "400": {
-                        "description": "Bad request"
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Validation error"
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "NIK": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The NIK field is required."
+                                                    }
+                                                },
+                                                "PatientID_Provider": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The PatientID_Provider field is required."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -1333,7 +2302,47 @@
                                             "example": "Patient updated successfully"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/Patient"
+                                            "properties": {
+                                                "ID": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "NIK": {
+                                                    "type": "string",
+                                                    "example": "1234567890123456"
+                                                },
+                                                "FullName": {
+                                                    "type": "string",
+                                                    "example": "Jane Doe"
+                                                },
+                                                "Sex": {
+                                                    "type": "string",
+                                                    "example": "F"
+                                                },
+                                                "BirthDate": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "1995-05-15"
+                                                },
+                                                "Address": {
+                                                    "type": "string",
+                                                    "example": "Jl. Contoh No.2"
+                                                },
+                                                "Phone": {
+                                                    "type": "string",
+                                                    "example": "081298765432"
+                                                },
+                                                "LastModifiedDate": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-02-07 12:30:00"
+                                                },
+                                                "LastModifiedBy": {
+                                                    "type": "string",
+                                                    "example": "admin"
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -1342,7 +2351,20 @@
                         }
                     },
                     "404": {
-                        "description": "Pasien tidak ditemukan"
+                        "description": "Pasien tidak ditemukan",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Patient not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -1362,8 +2384,7 @@
                         "description": "Search by exact ID (integer match).",
                         "required": false,
                         "schema": {
-                            "type": "integer",
-                            "example": 1
+                            "type": "integer"
                         }
                     },
                     {
@@ -1372,8 +2393,7 @@
                         "description": "Search support services by code or name using LIKE match.",
                         "required": false,
                         "schema": {
-                            "type": "string",
-                            "example": "urine"
+                            "type": "string"
                         }
                     }
                 ],
@@ -1383,16 +2403,86 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/SupportService"
-                                    }
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Data berhasil diambil"
+                                        },
+                                        "totaldata": {
+                                            "type": "integer",
+                                            "example": 2
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "ID": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "SupportServiceCode": {
+                                                        "type": "string",
+                                                        "example": "SS-001"
+                                                    },
+                                                    "SupportServiceName": {
+                                                        "type": "string",
+                                                        "example": "Radiology"
+                                                    },
+                                                    "Descriptions": {
+                                                        "type": "string",
+                                                        "example": "Radiology imaging services"
+                                                    },
+                                                    "CreateDate": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-02-07 10:00:00"
+                                                    },
+                                                    "CreateBy": {
+                                                        "type": "string",
+                                                        "example": "admin"
+                                                    },
+                                                    "LastModifiedDate": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-02-07 12:00:00"
+                                                    },
+                                                    "LastModifiedBy": {
+                                                        "type": "string",
+                                                        "example": "editor"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
                     },
                     "404": {
-                        "description": "Data not found"
+                        "description": "Data not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Data not found"
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 0
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {}
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -1417,6 +2507,10 @@
                                         "type": "string",
                                         "example": "Radiology"
                                     },
+                                    "Descriptions": {
+                                        "type": "string",
+                                        "example": ""
+                                    },
                                     "CreateBy": {
                                         "type": "string",
                                         "example": "admin"
@@ -1433,7 +2527,43 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/SupportService"
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Support service record created successfully"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "ID": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "SupportServiceCode": {
+                                                    "type": "string",
+                                                    "example": "SS-001"
+                                                },
+                                                "SupportServiceName": {
+                                                    "type": "string",
+                                                    "example": "Radiology"
+                                                },
+                                                "Descriptions": {
+                                                    "type": "string",
+                                                    "example": "Radiology"
+                                                },
+                                                "CreateBy": {
+                                                    "type": "string",
+                                                    "example": "admin"
+                                                },
+                                                "CreateDate": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-02-07 10:00:00"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
@@ -1470,6 +2600,10 @@
                                         "type": "string",
                                         "example": "Radiology"
                                     },
+                                    "Descriptions": {
+                                        "type": "string",
+                                        "example": "Radiology"
+                                    },
                                     "LastModifiedBy": {
                                         "type": "string",
                                         "example": "user123"
@@ -1487,6 +2621,10 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "ID": {
+                                            "type": "string",
+                                            "example": "1"
+                                        },
                                         "SupportServiceCode": {
                                             "type": "string",
                                             "example": "SS-001"
@@ -1495,9 +2633,18 @@
                                             "type": "string",
                                             "example": "Radiology"
                                         },
+                                        "Descriptions": {
+                                            "type": "string",
+                                            "example": "Radiology"
+                                        },
                                         "LastModifiedBy": {
                                             "type": "string",
                                             "example": "user123"
+                                        },
+                                        "LastModifiedDate": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "example": "2025-02-07 10:00:00"
                                         }
                                     },
                                     "type": "object"

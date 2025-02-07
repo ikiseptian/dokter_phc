@@ -32,13 +32,32 @@ class SupportServiceController extends Controller
  *         response=200,
  *         description="Successful operation",
  *         @OA\JsonContent(
- *             type="array",
- *             @OA\Items(ref="#/components/schemas/SupportService")
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Data berhasil diambil"),
+ *             @OA\Property(property="totaldata", type="integer", example=2),
+ *             @OA\Property(property="data", type="array",
+ *                 @OA\Items(
+ *                     @OA\Property(property="ID", type="integer", example=1),
+ *                     @OA\Property(property="SupportServiceCode", type="string", example="SS-001"),
+ *                     @OA\Property(property="SupportServiceName", type="string", example="Radiology"),
+ *                     @OA\Property(property="Descriptions", type="string", example="Radiology imaging services"),
+ *                     @OA\Property(property="CreateDate", type="string", format="date-time", example="2025-02-07 10:00:00"),
+ *                     @OA\Property(property="CreateBy", type="string", example="admin"),
+ *                     @OA\Property(property="LastModifiedDate", type="string", format="date-time", example="2025-02-07 12:00:00"),
+ *                     @OA\Property(property="LastModifiedBy", type="string", example="editor")
+ *                 )
+ *             )
  *         )
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Data not found"
+ *         description="Data not found",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Data not found"),
+ *             @OA\Property(property="total", type="integer", example=0),
+ *             @OA\Property(property="data", type="array", @OA\Items())
+ *         )
  *     )
  * )
  */
@@ -53,19 +72,10 @@ public function index(Request $request)
               ->where('gcrecord', 0); // Pastikan gcrecord tetap 0
         })
         ->when(!$id && $query, function ($q) use ($query) {
-            if (stripos($query, 'urine') !== false) {
-                // Jika query berisi "urine", hanya cari di SupportServiceName atau SupportServiceCode yang mengandung "urine"
-                $q->where(function ($subQuery) {
-                    $subQuery->where('SupportServiceName', 'LIKE', '%urine%')
-                             ->orWhere('SupportServiceCode', 'LIKE', '%urine%');
-                })->where('gcrecord', 0); // Pastikan gcrecord tetap 0
-            } else {
-                // Jika query bukan "urine", cari di beberapa kolom menggunakan LIKE
-                $q->where(function ($subQuery) use ($query) {
-                    $subQuery->where('SupportServiceName', 'LIKE', "%{$query}%")
-                             ->orWhere('SupportServiceCode', 'LIKE', "%{$query}%");
-                })->where('gcrecord', 0); // Pastikan gcrecord tetap 0
-            }
+            $q->where(function ($subQuery) use ($query) {
+                $subQuery->where('SupportServiceName', 'LIKE', "%{$query}%")
+                         ->orWhere('SupportServiceCode', 'LIKE', "%{$query}%");
+            })->where('gcrecord', 0);
         })
         ->get();
 
@@ -86,6 +96,7 @@ public function index(Request $request)
             'ID' => $service->ID,
             'SupportServiceCode' => $service->SupportServiceCode,
             'SupportServiceName' => $service->SupportServiceName,
+            'Descriptions' => $service->Descriptions,
             'CreateDate' => $service->CreateDate,
             'CreateBy' => $service->CreateBy,
             'LastModifiedDate' => $service->LastModifiedDate,
@@ -100,55 +111,72 @@ public function index(Request $request)
     ], 200);
 }
 
+
     /**
-     * @OA\Post(
-     *     path="/api/supportservice",
-     *     summary="Tambah data pasien baru",
-     *     description="Menambahkan pasien baru ke dalam database.",
-     *     tags={"SupportService"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *          @OA\Property(property="SupportServiceCode", type="string", example="SS-001"),
-     *          @OA\Property(property="SupportServiceName", type="string", example="Radiology"),
-     *          @OA\Property(property="CreateBy", type="string", example="admin"),
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="SupportService created",
-     *         @OA\JsonContent(ref="#/components/schemas/SupportService")
-     *     )
-     * )
-     */
-    public function store(Request $request)
+ * @OA\Post(
+ *     path="/api/supportservice",
+ *     summary="Tambah data pasien baru",
+ *     description="Menambahkan pasien baru ke dalam database.",
+ *     tags={"SupportService"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             @OA\Property(property="SupportServiceCode", type="string", example="SS-001"),
+ *             @OA\Property(property="SupportServiceName", type="string", example="Radiology"),
+ *             @OA\Property(property="Descriptions", type="string", example=""),
+ *             @OA\Property(property="CreateBy", type="string", example="admin")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=201,
+ *         description="SupportService created",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Support service record created successfully"),
+ *             @OA\Property(property="data", type="object",
+ *                 @OA\Property(property="ID", type="integer", example=1),
+ *                 @OA\Property(property="SupportServiceCode", type="string", example="SS-001"),
+ *                 @OA\Property(property="SupportServiceName", type="string", example="Radiology"),
+ *                 @OA\Property(property="Descriptions", type="string", example="Radiology"),
+ *                 @OA\Property(property="CreateBy", type="string", example="admin"),
+ *                 @OA\Property(property="CreateDate", type="string", format="date-time", example="2025-02-07 10:00:00")
+ *             )
+ *         )
+ *     )
+ * )
+ */
+public function store(Request $request)
 {
     $validated = $request->validate([
         'SupportServiceCode' => 'nullable|string|max:200|unique:Support_Service,SupportServiceCode',
         'SupportServiceName' => 'nullable|string|max:200',
+        'Descriptions' => 'nullable|string|max:200',
         'CreateBy' => 'nullable|string|max:20',
         'LastModifiedBy' => 'nullable|string|max:20',
-        'gcrecord' => 'nullable|boolean',
     ]);
+
+    // Pastikan `Descriptions` tidak null untuk menghindari error
+    $validated['Descriptions'] = $validated['Descriptions'] ?? '';
 
     // Tambahkan CreateDate berdasarkan waktu sekarang
     date_default_timezone_set('Asia/Jakarta');
-
     $validated['CreateDate'] = now()->format('Y-m-d H:i:s');
+
+    // Set default gcrecord = 0
+    $validated['gcrecord'] = 0;
 
     $supportService = SupportService::create($validated);
 
-    // Kembalikan response dengan body yang lengkap
+    // Kembalikan response dengan `gcrecord` disembunyikan
     return response()->json([
         'message' => 'Support service record created successfully',
         'data' => [
             'ID' => $supportService->ID,
             'SupportServiceCode' => $supportService->SupportServiceCode,
             'SupportServiceName' => $supportService->SupportServiceName,
+            'Descriptions' => $supportService->Descriptions,
             'CreateBy' => $supportService->CreateBy,
-            // 'LastModifiedBy' => $supportService->LastModifiedBy,
             'CreateDate' => $supportService->CreateDate,
-            // 'gcrecord' => $supportService->gcrecord,
         ]
     ], 201);
 }
@@ -173,6 +201,7 @@ public function index(Request $request)
  *         required=true,
  *         @OA\JsonContent(
  *             @OA\Property(property="SupportServiceName", type="string", example="Radiology"),
+ *             @OA\Property(property="Descriptions", type="string", example="Radiology"),
  *             @OA\Property(property="LastModifiedBy", type="string", example="user123")
  *         )
  *     ),
@@ -180,9 +209,12 @@ public function index(Request $request)
  *         response=200,
  *         description="SupportService updated",
  *         @OA\JsonContent(
+ *             @OA\Property(property="ID", type="string", example="1"),
  *             @OA\Property(property="SupportServiceCode", type="string", example="SS-001"),
  *             @OA\Property(property="SupportServiceName", type="string", example="Radiology"),
+ *             @OA\Property(property="Descriptions", type="string", example="Radiology"),
  *             @OA\Property(property="LastModifiedBy", type="string", example="user123"),
+ *             @OA\Property(property="LastModifiedDate", type="string", format="date-time", example="2025-02-07 10:00:00"),
  *         )
  *     ),
  *     @OA\Response(
@@ -205,6 +237,7 @@ public function update(Request $request, $id)
     $validated = $request->validate([
         'SupportServiceCode' => 'nullable|string|max:200',
         'SupportServiceName' => 'nullable|string|max:200',
+        'Descriptions' => 'nullable|string|max:200',
         'CreateBy' => 'nullable|string|max:20',
         'LastModifiedBy' => 'nullable|string|max:20',
         'gcrecord' => 'nullable|boolean',
@@ -223,6 +256,7 @@ public function update(Request $request, $id)
         'ID',
         // 'SupportServiceCode',
         'SupportServiceName',
+        'Descriptions',
         // 'CreateDate',
         // 'CreateBy',
         'LastModifiedDate',

@@ -32,16 +32,46 @@ class LabTransOtherController extends Controller
  *         response=200,
  *         description="Successful operation",
  *         @OA\JsonContent(
- *             type="array",
- *             @OA\Items(ref="#/components/schemas/LabTransOther")
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Data berhasil diambil"),
+ *             @OA\Property(property="totaldata", type="integer", example=5),
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="array",
+ *                 @OA\Items(
+ *                     @OA\Property(property="ID", type="integer", example=1),
+ *                     @OA\Property(property="LabTransID", type="integer", example=101),
+ *                     @OA\Property(property="SupportServiceID", type="integer", example=201),
+ *                     @OA\Property(
+ *                         property="SupportService",
+ *                         type="object",
+ *                         nullable=true,
+ *                         @OA\Property(property="SupportServiceCode", type="string", example="SS-001"),
+ *                         @OA\Property(property="SupportServiceName", type="string", example="Radiology"),
+ *                         @OA\Property(property="Descriptions", type="string", example="")
+ *                     ),
+ *                     @OA\Property(property="SupportServiceNotes", type="string", example="Rontgen dada dilakukan"),
+ *                     @OA\Property(property="CreateDate", type="string", format="date-time", example="2025-02-07 10:00:00"),
+ *                     @OA\Property(property="CreateBy", type="string", example="admin"),
+ *                     @OA\Property(property="LastModifiedDate", type="string", format="date-time", example="2025-02-08 12:00:00"),
+ *                     @OA\Property(property="LastModifiedBy", type="string", example="editor")
+ *                 )
+ *             )
  *         )
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Data not found"
+ *         description="Data not found",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Data not found"),
+ *             @OA\Property(property="total", type="integer", example=0),
+ *             @OA\Property(property="data", type="array", @OA\Items())
+ *         )
  *     )
  * )
  */
+
 
 public function index(Request $request)
 {
@@ -102,6 +132,7 @@ public function index(Request $request)
             'SupportService' => $labTransOther->supportService ? [
                 'SupportServiceCode' => $labTransOther->supportService->SupportServiceCode,
                 'SupportServiceName' => $labTransOther->supportService->SupportServiceName,
+                'Descriptions' => $labTransOther->supportService->Descriptions,
             ] : null,
             'SupportServiceNotes' => $labTransOther->SupportServiceNotes,
             'CreateDate' => $labTransOther->CreateDate,
@@ -138,8 +169,28 @@ public function index(Request $request)
  *         description="Data berhasil disimpan",
  *         @OA\JsonContent(
  *             type="object",
- *             @OA\Property(property="message", type="string", example="Data berhasil disimpan"),
- *             @OA\Property(property="data", ref="#/components/schemas/LabTransOther")
+ *                 @OA\Property(
+ *                 property="data",
+ *                 type="array",
+ *                 @OA\Items(
+ *                     @OA\Property(property="ID", type="integer", example=1),
+ *                     @OA\Property(property="LabTransID", type="integer", example=101),
+ *                     @OA\Property(property="SupportServiceID", type="integer", example=201),
+ *                     @OA\Property(
+ *                         property="SupportService",
+ *                         type="object",
+ *                         nullable=true,
+ *                         @OA\Property(property="SupportServiceCode", type="string", example="SS-001"),
+ *                         @OA\Property(property="SupportServiceName", type="string", example="Radiology"),
+ *                         @OA\Property(property="Descriptions", type="string", example="")
+ *                     ),
+ *                     @OA\Property(property="SupportServiceNotes", type="string", example="Rontgen dada dilakukan"),
+ *                     @OA\Property(property="CreateDate", type="string", format="date-time", example="2025-02-07 10:00:00"),
+ *                     @OA\Property(property="CreateBy", type="string", example="admin"),
+ *                     @OA\Property(property="LastModifiedDate", type="string", format="date-time", example="2025-02-08 12:00:00"),
+ *                     @OA\Property(property="LastModifiedBy", type="string", example="editor")
+ *                 )
+ *             )
  *         )
  *     ),
  *     @OA\Response(
@@ -212,10 +263,34 @@ public function store(Request $request)
  *             @OA\Property(property="LastModifiedBy", type="string"),
  *         )
  *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation",
- *         @OA\JsonContent(ref="#/components/schemas/LabTransOther")
+ *         @OA\Response(
+ *         response=201,
+ *         description="Data berhasil di update",
+ *         @OA\JsonContent(
+ *             type="object",
+ *                 @OA\Property(
+ *                 property="data",
+ *                 type="array",
+ *                 @OA\Items(
+ *                     @OA\Property(property="ID", type="integer", example=1),
+ *                     @OA\Property(property="LabTransID", type="integer", example=101),
+ *                     @OA\Property(property="SupportServiceID", type="integer", example=201),
+ *                     @OA\Property(
+ *                         property="SupportService",
+ *                         type="object",
+ *                         nullable=true,
+ *                         @OA\Property(property="SupportServiceCode", type="string", example="SS-001"),
+ *                         @OA\Property(property="SupportServiceName", type="string", example="Radiology"),
+ *                         @OA\Property(property="Descriptions", type="string", example="")
+ *                     ),
+ *                     @OA\Property(property="SupportServiceNotes", type="string", example="Rontgen dada dilakukan"),
+ *                     @OA\Property(property="CreateDate", type="string", format="date-time", example="2025-02-07 10:00:00"),
+ *                     @OA\Property(property="CreateBy", type="string", example="admin"),
+ *                     @OA\Property(property="LastModifiedDate", type="string", format="date-time", example="2025-02-08 12:00:00"),
+ *                     @OA\Property(property="LastModifiedBy", type="string", example="editor")
+ *                 )
+ *             )
+ *         )
  *     ),
  *     @OA\Response(
  *         response=404,

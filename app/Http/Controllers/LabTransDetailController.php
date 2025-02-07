@@ -11,38 +11,72 @@ use OpenApi\Annotations as OA;
 class LabTransDetailController extends Controller
 {
     /**
- * @OA\Get(
- *     path="/api/labtransdetail",
- *     tags={"Lab Detail"},
- *     summary="Get all Lab Trans with a single search parameter",
- *     @OA\Parameter(
- *         name="id",
- *         in="query",
- *         required=false,
- *         @OA\Schema(type="integer"),
- *         description="Search by exact ID (integer match)"
- *     ),
- *     @OA\Parameter(
- *         name="query",
- *         in="query",
- *         required=false,
- *         @OA\Schema(type="string"),
- *         description="Search by text query (LIKE match), filtering for 'urine' if provided"
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Filtered list of Lab Trans",
- *         @OA\JsonContent(
- *             type="array",
- *             @OA\Items(ref="#/components/schemas/LabTransDetail")
- *         )
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Data not found"
- *     )
- * )
- */
+     * @OA\Get(
+     *     path="/api/labtransdetail",
+     *     tags={"Lab Detail"},
+     *     summary="Get all Lab Trans with a single search parameter",
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="query",
+     *         required=false,
+     *         @OA\Schema(type="integer"),
+     *         description="Search by exact ID (integer match)"
+     *     ),
+     *     @OA\Parameter(
+     *         name="query",
+     *         in="query",
+     *         required=false,
+     *         @OA\Schema(type="string"),
+     *         description="Search by text query (LIKE match), filtering for 'urine' if provided"
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Filtered list of Lab Trans",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Data berhasil diambil"),
+     *             @OA\Property(property="totaldata", type="integer", example=10),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     @OA\Property(property="ID", type="integer", example=1),
+     *                     @OA\Property(property="LabTransID", type="integer", example=101),
+     *                     @OA\Property(property="ItemTestID", type="integer", example=201),
+     *                     @OA\Property(
+     *                         property="itemTest",
+     *                         type="object",
+     *                         nullable=true,
+     *                         @OA\Property(property="ItemTestCode", type="string", example="T-001"),
+     *                         @OA\Property(property="ItemTestName", type="string", example="Hemoglobin Test"),
+     *                         @OA\Property(property="Group", type="string", example="Hematology"),
+     *                         @OA\Property(property="SubGroup", type="string", example="Blood"),
+     *                         @OA\Property(property="Descriptions", type="string", example="Test for hemoglobin level")
+     *                     ),
+     *                     @OA\Property(property="ResultValue", type="string", example="5.4"),
+     *                     @OA\Property(property="Unit", type="string", example="mmol/L"),
+     *                     @OA\Property(property="ReferenceValue", type="string", example="3.9-6.1"),
+     *                     @OA\Property(property="ResultNotes", type="string", example="Normal"),
+     *                     @OA\Property(property="CreateDate", type="string", format="date-time", example="2025-02-07 10:00:00"),
+     *                     @OA\Property(property="CreateBy", type="string", example="admin"),
+     *                     @OA\Property(property="LastModifiedDate", type="string", format="date-time", example="2025-02-08 12:00:00"),
+     *                     @OA\Property(property="LastModifiedBy", type="string", example="editor")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Data not found",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Data not found"),
+     *             @OA\Property(property="total", type="integer", example=0),
+     *             @OA\Property(property="data", type="array", @OA\Items())
+     *         )
+     *     )
+     * )
+     */
 public function index(Request $request)
 {
     $id = $request->query('id');
@@ -103,6 +137,7 @@ public function index(Request $request)
             'ReferenceValue' => $detail->ReferenceValue,
             'ResultNotes' => $detail->ResultNotes,
             'CreateDate' => $detail->CreateDate,
+            'CreateBy' => $detail->CreateBy,
             'LastModifiedDate' => $detail->LastModifiedDate,
             'LastModifiedBy' => $detail->LastModifiedBy,
         ];
@@ -134,15 +169,40 @@ public function index(Request $request)
  *             @OA\Property(property="CreateBy", type="string", example="Admin")
  *         )
  *     ),
- *     @OA\Response(
- *         response=201,
- *         description="Data berhasil disimpan",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(property="message", type="string", example="Data berhasil disimpan"),
- *             @OA\Property(property="data", ref="#/components/schemas/LabTransDetail")
- *         )
- *     ),
+ *    @OA\Response(
+     *         response=200,
+     *         description="Filtered list of Lab Trans",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Data berhasil diambil"),
+     *             @OA\Property(property="totaldata", type="integer", example=10),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     @OA\Property(property="ID", type="integer", example=1),
+     *                     @OA\Property(property="LabTransID", type="integer", example=101),
+     *                     @OA\Property(property="ItemTestID", type="integer", example=201),
+     *                     @OA\Property(
+     *                         property="itemTest",
+     *                         type="object",
+     *                         nullable=true,
+     *                         @OA\Property(property="ItemTestCode", type="string", example="T-001"),
+     *                         @OA\Property(property="ItemTestName", type="string", example="Hemoglobin Test"),
+     *                         @OA\Property(property="Group", type="string", example="Hematology"),
+     *                         @OA\Property(property="SubGroup", type="string", example="Blood"),
+     *                         @OA\Property(property="Descriptions", type="string", example="Test for hemoglobin level")
+     *                     ),
+     *                     @OA\Property(property="ResultValue", type="string", example="5.4"),
+     *                     @OA\Property(property="Unit", type="string", example="mmol/L"),
+     *                     @OA\Property(property="ReferenceValue", type="string", example="3.9-6.1"),
+     *                     @OA\Property(property="ResultNotes", type="string", example="Normal"),
+     *                     @OA\Property(property="CreateDate", type="string", format="date-time", example="2025-02-07 10:00:00"),
+     *                     @OA\Property(property="CreateBy", type="string", example="admin"),
+     *                 )
+     *             )
+     *         )
+     *     ),
  *     @OA\Response(
  *         response=400,
  *         description="Bad Request"
@@ -225,11 +285,36 @@ public function store(Request $request)
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Data updated successfully",
+     *         description="Filtered list of Lab Trans",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="message", type="string", example="Data updated successfully"),
-     *             @OA\Property(property="data", ref="#/components/schemas/LabTransDetail")
+     *             @OA\Property(property="message", type="string", example="Data berhasil diambil"),
+     *             @OA\Property(property="totaldata", type="integer", example=10),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     @OA\Property(property="ID", type="integer", example=1),
+     *                     @OA\Property(property="LabTransID", type="integer", example=101),
+     *                     @OA\Property(property="ItemTestID", type="integer", example=201),
+     *                     @OA\Property(
+     *                         property="itemTest",
+     *                         type="object",
+     *                         nullable=true,
+     *                         @OA\Property(property="ItemTestCode", type="string", example="T-001"),
+     *                         @OA\Property(property="ItemTestName", type="string", example="Hemoglobin Test"),
+     *                         @OA\Property(property="Group", type="string", example="Hematology"),
+     *                         @OA\Property(property="SubGroup", type="string", example="Blood"),
+     *                         @OA\Property(property="Descriptions", type="string", example="Test for hemoglobin level")
+     *                     ),
+     *                     @OA\Property(property="ResultValue", type="string", example="5.4"),
+     *                     @OA\Property(property="Unit", type="string", example="mmol/L"),
+     *                     @OA\Property(property="ReferenceValue", type="string", example="3.9-6.1"),
+     *                     @OA\Property(property="ResultNotes", type="string", example="Normal"),
+     *                     @OA\Property(property="LastModifiedDate", type="string", format="date-time", example="2025-02-08 12:00:00"),
+     *                     @OA\Property(property="LastModifiedBy", type="string", example="editor")
+     *                 )
+     *             )
      *         )
      *     ),
      *     @OA\Response(

@@ -16,6 +16,7 @@ class SupportService extends Model
     protected $fillable = [
         'SupportServiceCode',
         'SupportServiceName',
+        'Descriptions',
         'CreateDate',
         'CreateBy',
         'LastModifiedDate',

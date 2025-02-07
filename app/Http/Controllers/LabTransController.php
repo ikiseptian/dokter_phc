@@ -32,10 +32,71 @@ class LabTransController extends Controller
  *     ),
  *     @OA\Response(
  *         response=200,
- *         description="A list of Lab Trans (filtered by ID or query)",
+ *         description="Successful operation",
  *         @OA\JsonContent(
- *             type="array",
- *             @OA\Items(ref="#/components/schemas/LabTrans")
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Data berhasil diambil"),
+ *             @OA\Property(property="totaldata", type="integer", example=5),
+ *             @OA\Property(property="data", type="object",
+ *                 @OA\Property(property="ID", type="integer", example=1),
+ *                 @OA\Property(property="LabNumber", type="string", example="LAB-12345"),
+ *                 @OA\Property(property="LabTest", type="string", example="Blood Test"),
+ *                 @OA\Property(property="TransDate", type="string", format="date", example="2024-09-06"),
+ *                 @OA\Property(property="DoctorReferral", type="string", example="Dr. John Doe"),
+ *                 @OA\Property(property="Age", type="integer", example=30),
+ *                 @OA\Property(property="Anamnesa", type="string", example="Pasien mengalami demam tinggi"),
+ *                 @OA\Property(property="BB", type="string", example="70"),
+ *                 @OA\Property(property="TB", type="string", example="170"),
+ *                 @OA\Property(property="LP", type="string", example="80"),
+ *                 @OA\Property(property="TD", type="string", example="120/80"),
+ *                 @OA\Property(property="BMI", type="string", example="22.5"),
+ *                 @OA\Property(
+ *                     property="patient",
+ *                     type="object",
+ *                     @OA\Property(property="ID", type="integer", example=1),
+ *                     @OA\Property(property="NIK", type="string", example="1234567890123456"),
+ *                     @OA\Property(property="FullName", type="string", example="John Doe"),
+ *                     @OA\Property(property="Sex", type="string", example="Male"),
+ *                     @OA\Property(property="BirthDate", type="string", format="date", example="1994-05-12"),
+ *                     @OA\Property(property="Address", type="string", example="Jl. Merdeka No. 10, Jakarta"),
+ *                     @OA\Property(property="Phone", type="string", example="08123456789"),
+ *                 ),
+ *                 @OA\Property(
+ *                     property="Lab_Trans_Details",
+ *                     type="array",
+ *                     @OA\Items(
+ *                         @OA\Property(property="ID", type="integer", example=1),
+ *                         @OA\Property(property="ItemTestID", type="integer", example=101),
+ *                         @OA\Property(property="ItemTestCode", type="string", example="T-001"),
+ *                         @OA\Property(property="ItemTestName", type="string", example="Hemoglobin Test"),
+ *                         @OA\Property(property="Group", type="string", example="Hematology"),
+ *                         @OA\Property(property="SubGroup", type="string", example="Blood"),
+ *                         @OA\Property(property="Descriptions", type="string", example="Test for hemoglobin level"),
+ *                         @OA\Property(property="ResultValue", type="string", example="5.4"),
+ *                         @OA\Property(property="Unit", type="string", example="mmol/L"),
+ *                         @OA\Property(property="ReferenceValue", type="string", example="3.9-6.1"),
+ *                         @OA\Property(property="ResultNotes", type="string", example="Normal"),
+ *                     )
+ *                 ),
+ *                 @OA\Property(
+ *                     property="Lab_Trans_Others",
+ *                     type="array",
+ *                     @OA\Items(
+ *                         @OA\Property(property="ID", type="integer", example=1),
+ *                         @OA\Property(property="SupportServiceID", type="integer", example=201),
+ *                         @OA\Property(property="SupportServiceCode", type="string", example="SS-001"),
+ *                         @OA\Property(property="SupportServiceName", type="string", example="Radiology"),
+ *                         @OA\Property(property="SupportServiceNotes", type="string", example="Rontgen dada dilakukan"),
+ *                     )
+ *                 ),
+ *                 @OA\Property(property="FinalStatement", type="string", example="Sehat"),
+ *                 @OA\Property(property="FinalResult", type="string", example="Normal"),
+ *                 @OA\Property(property="Status", type="string", example="Completed"),
+ *                 @OA\Property(property="CreateDate", type="string", format="date-time", example="2025-02-07 10:00:00"),
+ *                 @OA\Property(property="CreateBy", type="string", example="admin"),
+ *                 @OA\Property(property="LastModifiedDate", type="string", format="date-time", example="2025-02-07 10:00:00"),
+ *                 @OA\Property(property="LastModifiedBy", type="string", example="admin")
+ *             )
  *         )
  *     )
  * )
@@ -58,16 +119,14 @@ public function index(Request $request)
     ])
         ->where('gcrecord', 0)
         ->when($id, function ($q) use ($id) {
-            $q->where('ID', $id); // Filter berdasarkan ID (gunakan "=")
+            $q->where('ID', $id);
         })
         ->when(!$id && $query, function ($q) use ($query) {
             if (stripos($query, 'urine') !== false) {
-                // Jika query berisi "urine", filter hanya deskripsi yang mengandung "urine"
                 $q->whereHas('labTransDetails.itemTest', function ($subQuery) {
                     $subQuery->where('Descriptions', 'LIKE', '%urine%');
                 });
             } else {
-                // Jika query bukan "urine", cari di beberapa kolom menggunakan LIKE
                 $q->where('LabNumber', 'LIKE', "%{$query}%")
                     ->orWhere('LabTest', 'LIKE', "%{$query}%")
                     ->orWhereHas('patient', function ($subQuery) use ($query) {
@@ -78,12 +137,9 @@ public function index(Request $request)
         })
         ->get();
 
-    // Hitung total data setelah filter
     $total = $labTrans->count();
 
-    // Format data yang akan dikirimkan
     $formattedData = $labTrans->map(function ($labTrans) {
-        // Hitung umur berdasarkan BirthDate
         $age = null;
         if ($labTrans->patient && $labTrans->patient->BirthDate) {
             $birthYear = date('Y', strtotime($labTrans->patient->BirthDate));
@@ -104,7 +160,7 @@ public function index(Request $request)
             'LP' => $labTrans->LP,
             'TD' => $labTrans->TD,
             'BMI' => $labTrans->BMI,
-            'NIK' => $labTrans->patient->NIK ?? null,
+            'PatientID' => $labTrans->PatientID,
             'patient' => $labTrans->patient ? [
                 'ID'                  => $labTrans->patient->ID ?? null,
                 'NIK'                 => $labTrans->patient->NIK ?? null,
@@ -114,8 +170,6 @@ public function index(Request $request)
                 'BirthDate'           => $labTrans->patient->BirthDate ?? null,
                 'Address'             => $labTrans->patient->Address ?? null,
                 'Phone'               => $labTrans->patient->Phone ?? null,
-                'CreateBy'            => $labTrans->patient->CreateBy ?? null,
-                'LastModifiedBy'      => $labTrans->patient->LastModifiedBy ?? null,
             ] : null,
             'Lab_Trans_Details' => $labTrans->labTransDetails->map(function ($detail) {
                 return [
@@ -141,6 +195,13 @@ public function index(Request $request)
                     'SupportServiceNotes'  => $other->SupportServiceNotes,
                 ];
             }),
+            'FinalStatement'       => $labTrans->FinalStatement ?? "N/A",
+            'FinalResult'          => $labTrans->FinalResult ?? "N/A",
+            'Status'               => $labTrans->Status ?? "N/A",
+            'CreateDate'           => $labTrans->CreateDate ?? "N/A",
+            'CreateBy'             => $labTrans->CreateBy ?? "N/A",
+            'LastModifiedDate'     => $labTrans->LastModifiedDate ?? "N/A",
+            'LastModifiedBy'       => $labTrans->LastModifiedBy ?? "N/A",
         ];
     });
 
@@ -155,7 +216,7 @@ public function index(Request $request)
 
 
 
-    /**
+/**
  * @OA\Post(
  *     path="/api/labtrans",
  *     summary="Create a new Lab Transaction",
@@ -163,7 +224,7 @@ public function index(Request $request)
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
- *             required={"LabNumber", "LabTest", "TransDate", "NIK"},
+ *             required={"LabNumber", "LabTest", "TransDate", "PatientID"},
  *             @OA\Property(property="LabNumber", type="string", example="LAB-12345"),
  *             @OA\Property(property="LabTest", type="string", example="Blood Test"),
  *             @OA\Property(property="TransDate", type="string", format="date", example="2024-09-06"),
@@ -175,31 +236,39 @@ public function index(Request $request)
  *             @OA\Property(property="LP", type="string", example="80"),
  *             @OA\Property(property="TD", type="string", example="120/80"),
  *             @OA\Property(property="BMI", type="string", example="22.5"),
- *             @OA\Property(property="FinalStatement", type="string", example="Sehat"),
- *             @OA\Property(property="FinalResult", type="string", example="Normal"),
- *             @OA\Property(property="Status", type="string", example="Completed"),
- *             @OA\Property(property="CreateBy", type="string", example="admin"),
  *             @OA\Property(
  *                 property="Lab_Trans_Details",
  *                 type="array",
  *                 @OA\Items(
+ *                     @OA\Property(property="ID", type="integer", example=1),
  *                     @OA\Property(property="ItemTestID", type="integer", example=101),
+ *                     @OA\Property(property="ItemTestCode", type="string", example="T-001"),
+ *                     @OA\Property(property="ItemTestName", type="string", example="Hemoglobin Test"),
+ *                     @OA\Property(property="Group", type="string", example="Hematology"),
+ *                     @OA\Property(property="SubGroup", type="string", example="Blood"),
+ *                     @OA\Property(property="Descriptions", type="string", example="Test for hemoglobin level"),
  *                     @OA\Property(property="ResultValue", type="string", example="5.4"),
  *                     @OA\Property(property="Unit", type="string", example="mmol/L"),
  *                     @OA\Property(property="ReferenceValue", type="string", example="3.9-6.1"),
  *                     @OA\Property(property="ResultNotes", type="string", example="Normal"),
- *                     @OA\Property(property="CreateBy", type="string", example="admin"),
  *                 )
  *             ),
  *             @OA\Property(
  *                 property="Lab_Trans_Others",
  *                 type="array",
  *                 @OA\Items(
+ *                     @OA\Property(property="ID", type="integer", example=1),
  *                     @OA\Property(property="SupportServiceID", type="integer", example=201),
+ *                     @OA\Property(property="SupportServiceCode", type="string", example="SS-001"),
+ *                     @OA\Property(property="SupportServiceName", type="string", example="Radiology"),
  *                     @OA\Property(property="SupportServiceNotes", type="string", example="Rontgen dada dilakukan"),
- *                     @OA\Property(property="CreateBy", type="string", example="admin"),
  *                 )
- *             )
+ *             ),
+ *             @OA\Property(property="FinalStatement", type="string", example="Sehat"),
+ *             @OA\Property(property="FinalResult", type="string", example="Normal"),
+ *             @OA\Property(property="Status", type="string", example="Completed"),
+ *             @OA\Property(property="CreateDate", type="string", format="date-time", example="2025-02-07 10:00:00"),
+ *             @OA\Property(property="CreateBy", type="string", example="admin")
  *         )
  *     ),
  *     @OA\Response(
@@ -212,7 +281,7 @@ public function index(Request $request)
  *                 @OA\Property(property="LabNumber", type="string", example="LAB-12345"),
  *                 @OA\Property(property="LabTest", type="string", example="Blood Test"),
  *                 @OA\Property(property="TransDate", type="string", format="date", example="2024-09-06"),
- *                 @OA\Property(property="NIK", type="string", example="1234567890123456"),
+ *                 @OA\Property(property="DoctorReferral", type="string", example="Dr. John Doe"),
  *                 @OA\Property(property="Age", type="integer", example=30),
  *                 @OA\Property(property="Anamnesa", type="string", example="Pasien mengalami demam tinggi"),
  *                 @OA\Property(property="BB", type="string", example="70"),
@@ -230,24 +299,46 @@ public function index(Request $request)
  *                     @OA\Property(property="BirthDate", type="string", format="date", example="1994-05-12"),
  *                     @OA\Property(property="Address", type="string", example="Jl. Merdeka No. 10, Jakarta"),
  *                     @OA\Property(property="Phone", type="string", example="08123456789"),
- *                 )
- *             )
- *         )
- *     ),
- *     @OA\Response(
- *         response=400,
- *         description="Bad Request",
- *         @OA\JsonContent(
- *             @OA\Property(property="message", type="string", example="NIK tidak ditemukan dalam database pasien"),
- *             @OA\Property(property="errors", type="object",
- *                 @OA\Property(property="NIK", type="array",
- *                     @OA\Items(type="string", example="NIK tidak terdaftar")
- *                 )
+ *                 ),
+ *                 @OA\Property(
+ *                     property="Lab_Trans_Details",
+ *                     type="array",
+ *                     @OA\Items(
+ *                         @OA\Property(property="ID", type="integer", example=1),
+ *                         @OA\Property(property="ItemTestID", type="integer", example=101),
+ *                         @OA\Property(property="ItemTestCode", type="string", example="T-001"),
+ *                         @OA\Property(property="ItemTestName", type="string", example="Hemoglobin Test"),
+ *                         @OA\Property(property="Group", type="string", example="Hematology"),
+ *                         @OA\Property(property="SubGroup", type="string", example="Blood"),
+ *                         @OA\Property(property="Descriptions", type="string", example="Test for hemoglobin level"),
+ *                         @OA\Property(property="ResultValue", type="string", example="5.4"),
+ *                         @OA\Property(property="Unit", type="string", example="mmol/L"),
+ *                         @OA\Property(property="ReferenceValue", type="string", example="3.9-6.1"),
+ *                         @OA\Property(property="ResultNotes", type="string", example="Normal"),
+ *                     )
+ *                 ),
+ *                 @OA\Property(
+ *                     property="Lab_Trans_Others",
+ *                     type="array",
+ *                     @OA\Items(
+ *                         @OA\Property(property="ID", type="integer", example=1),
+ *                         @OA\Property(property="SupportServiceID", type="integer", example=201),
+ *                         @OA\Property(property="SupportServiceCode", type="string", example="SS-001"),
+ *                         @OA\Property(property="SupportServiceName", type="string", example="Radiology"),
+ *                         @OA\Property(property="SupportServiceNotes", type="string", example="Rontgen dada dilakukan"),
+ *                     )
+ *                 ),
+ *                 @OA\Property(property="FinalStatement", type="string", example="Sehat"),
+ *                 @OA\Property(property="FinalResult", type="string", example="Normal"),
+ *                 @OA\Property(property="Status", type="string", example="Completed"),
+ *                 @OA\Property(property="CreateDate", type="string", format="date-time", example="2025-02-07 10:00:00"),
+ *                 @OA\Property(property="CreateBy", type="string", example="admin")
  *             )
  *         )
  *     )
  * )
  */
+
 
     public function store(Request $request)
 {
@@ -350,8 +441,6 @@ public function index(Request $request)
         'LP' => $labTrans->LP,
         'TD' => $labTrans->TD,
         'BMI' => $labTrans->BMI,
-        'CreateDate'=> $labTrans->CreateDate,
-        'CreateBy'=> $labTrans->CreateBy,
         'NIK' => $validatedData['NIK'],
         'patient' => [
             'ID'                  => $patient->ID ?? null,
@@ -380,6 +469,8 @@ public function index(Request $request)
                 'SupportServiceNotes'  => $other->SupportServiceNotes,
             ];
         }),
+        'CreateDate'=> $labTrans->CreateDate,
+        'CreateBy'=> $labTrans->CreateBy,
     ];
 
     return response()->json([
@@ -422,7 +513,7 @@ public function index(Request $request)
  *             @OA\Property(property="LastModifiedBy", type="string", example="admin")
  *         )
  *     ),
- *     @OA\Response(
+ *      * @OA\Response(
  *         response=200,
  *         description="Data berhasil diupdate",
  *         @OA\JsonContent(
@@ -433,6 +524,17 @@ public function index(Request $request)
  *                 @OA\Property(property="LabTest", type="string", example="Blood Test"),
  *                 @OA\Property(property="TransDate", type="string", format="date", example="2024-09-06"),
  *                 @OA\Property(property="DoctorReferral", type="string", example="Dr. John Doe"),
+ *                 
+ *                 @OA\Property(property="patient", type="object",
+ *                     @OA\Property(property="ID", type="integer", example=1),
+ *                     @OA\Property(property="NIK", type="string", example="123456789"),
+ *                     @OA\Property(property="FullName", type="string", example="John Doe"),
+ *                     @OA\Property(property="Sex", type="string", example="Male"),
+ *                     @OA\Property(property="BirthDate", type="string", format="date", example="1994-09-06"),
+ *                     @OA\Property(property="Address", type="string", example="Jakarta, Indonesia"),
+ *                     @OA\Property(property="Phone", type="string", example="081234567890"),
+ *                 ),
+ *                 
  *                 @OA\Property(property="Age", type="string", example="30"), 
  *                 @OA\Property(property="Anamnesa", type="string", example="Pasien mengalami demam tinggi"),
  *                 @OA\Property(property="BB", type="string", example="70"),
@@ -443,17 +545,8 @@ public function index(Request $request)
  *                 @OA\Property(property="FinalStatement", type="string", example="Sehat"),
  *                 @OA\Property(property="FinalResult", type="string", example="Normal"),
  *                 @OA\Property(property="Status", type="string", example="Completed"),
- *                 @OA\Property(property="LastModifiedBy", type="string", example="admin"),
- *                 @OA\Property(property="patient", type="object",
- *                     @OA\Property(property="ID", type="integer", example=1),
- *                     @OA\Property(property="NIK", type="string", example="123456789"),
- *                     @OA\Property(property="FullName", type="string", example="John Doe"),
- *                     @OA\Property(property="Sex", type="string", example="Male"),
- *                     @OA\Property(property="BirthDate", type="string", format="date", example="1994-09-06"),
- *                     @OA\Property(property="Address", type="string", example="Jakarta, Indonesia"),
- *                     @OA\Property(property="Phone", type="string", example="081234567890"),
- *                     @OA\Property(property="LastModifiedBy", type="string", example="admin")
- *                 )
+ *                 @OA\Property(property="LastModifiedDate", type="string", format="date-time", example="2025-02-07 10:00:00"),
+ *                 @OA\Property(property="LastModifiedBy", type="string", example="admin")
  *             )
  *         )
  *     ),
@@ -520,6 +613,17 @@ public function index(Request $request)
         'LabTest' => $labTrans->LabTest,
         'TransDate' => $labTrans->TransDate,
         'DoctorReferral' => $labTrans->DoctorReferral,
+        'patient' => $patient ? [
+            'ID'                  => $patient->ID ?? null,
+            'NIK'                 => $patient->NIK ?? null,
+            'PatientID_Provider'  => $patient->PatientID_Provider ?? null,
+            'FullName'            => $patient->FullName ?? null,
+            'Sex'                 => $patient->Sex ?? null,
+            'BirthDate'           => $patient->BirthDate ?? null,
+            'Address'             => $patient->Address ?? null,
+            'Phone'               => $patient->Phone ?? null,
+            // 'LastModifiedBy'      => $patient->LastModifiedBy ?? null,
+        ] : null, // Jika gcrecord = 1, maka patient = null
         'Age' => $age, // Umur otomatis dihitung jika pasien tersedia
         'Anamnesa' => $labTrans->Anamnesa,
         'BB' => $labTrans->BB,
@@ -530,18 +634,9 @@ public function index(Request $request)
         'FinalStatement' => $labTrans->FinalStatement,
         'FinalResult' => $labTrans->FinalResult,
         'Status' => $labTrans->Status,
+        'Status' => $labTrans->Status,
+        'LastModifiedDate' => $labTrans->LastModifiedDate,
         'LastModifiedBy' => $labTrans->LastModifiedBy,
-        'patient' => $patient ? [
-            'ID'                  => $patient->ID ?? null,
-            'NIK'                 => $patient->NIK ?? null,
-            'PatientID_Provider'  => $patient->PatientID_Provider ?? null,
-            'FullName'            => $patient->FullName ?? null,
-            'Sex'                 => $patient->Sex ?? null,
-            'BirthDate'           => $patient->BirthDate ?? null,
-            'Address'             => $patient->Address ?? null,
-            'Phone'               => $patient->Phone ?? null,
-            'LastModifiedBy'      => $patient->LastModifiedBy ?? null,
-        ] : null, // Jika gcrecord = 1, maka patient = null
     ];
 
     return response()->json([
