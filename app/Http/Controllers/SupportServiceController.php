@@ -224,44 +224,51 @@ public function store(Request $request)
  * )
  */
 
-public function update(Request $request, $id)
-{
-    // Cari data berdasarkan ID
-    $supportservice = SupportService::find($id);
-
-    if (!$supportservice) {
-        return response()->json(['message' => 'Support service not found'], 404);
-    }
-
-    // Validasi request
-    $validated = $request->validate([
-        'SupportServiceCode' => 'nullable|string|max:200',
-        'SupportServiceName' => 'nullable|string|max:200',
-        'Descriptions' => 'nullable|string|max:200',
-        'CreateBy' => 'nullable|string|max:20',
-        'LastModifiedBy' => 'nullable|string|max:20',
-        'gcrecord' => 'nullable|boolean',
-    ]);
-
-    // Update LastModifiedDate secara otomatis
-    date_default_timezone_set('Asia/Jakarta');
-
-    $validated['LastModifiedDate'] = now()->format('Y-m-d H:i:s');
-
-    // Update data SupportService
-    $supportservice->update($validated);
-
-    // Kembalikan response dengan field yang diinginkan
-    return response()->json($supportservice->only([
-        'ID',
-        // 'SupportServiceCode',
-        'SupportServiceName',
-        'Descriptions',
-        // 'CreateDate',
-        // 'CreateBy',
-        'LastModifiedDate',
-        'LastModifiedBy',
-        // 'gcrecord'
-    ]), 200);
-}
-}
+ public function update(Request $request)
+ {
+     // Ambil ID dari query parameter (?id=12)
+     $id = $request->query('id');
+ 
+     // Jika ID tidak diberikan, kembalikan error
+     if (!$id) {
+         return response()->json(['message' => 'ID is required'], 400);
+     }
+ 
+     // Cari data berdasarkan ID
+     $supportservice = SupportService::find($id);
+ 
+     if (!$supportservice) {
+         return response()->json(['message' => 'Support service not found'], 404);
+     }
+ 
+     // Validasi request
+     $validated = $request->validate([
+         'SupportServiceCode' => 'nullable|string|max:200',
+         'SupportServiceName' => 'nullable|string|max:200',
+         'Descriptions' => 'nullable|string|max:200',
+         'CreateBy' => 'nullable|string|max:20',
+         'LastModifiedBy' => 'nullable|string|max:20',
+         'gcrecord' => 'nullable|boolean',
+     ]);
+ 
+     // Update LastModifiedDate secara otomatis
+     date_default_timezone_set('Asia/Jakarta');
+ 
+     $validated['LastModifiedDate'] = now()->format('Y-m-d H:i:s');
+ 
+     // Update data SupportService
+     $supportservice->update($validated);
+ 
+     // Kembalikan response dengan field yang diinginkan
+     return response()->json([
+         'message' => 'Support service updated successfully',
+         'data' => $supportservice->only([
+             'ID',
+             'SupportServiceName',
+             'Descriptions',
+             'LastModifiedDate',
+             'LastModifiedBy',
+         ])
+     ], 200);
+ }
+} 

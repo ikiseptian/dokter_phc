@@ -561,15 +561,27 @@ public function index(Request $request)
  * )
  */
 
- public function update(Request $request, $id)
+ public function update(Request $request)
 {
-    // Find the lab transaction
+    // Ambil ID dari query parameter (?id=12)
+    $id = $request->query('id');
+
+    // Jika ID tidak diberikan, kembalikan error
+    if (!$id) {
+        return response()->json(['message' => 'ID is required'], 400);
+    }
+
+    // Cari data transaksi lab berdasarkan ID dan pastikan gcrecord = 0
     $labTrans = Lab_Trans::with(['patient'])
         ->where('ID', $id)
         ->where('gcrecord', 0)
-        ->firstOrFail();
+        ->first();
 
-    // Validate the request data
+    if (!$labTrans) {
+        return response()->json(['message' => 'Data not found'], 404);
+    }
+
+    // Validasi request
     $validatedData = $request->validate([
         'LabNumber' => 'required|string|max:20',
         'LabTest' => 'required|string|max:20',
@@ -592,7 +604,7 @@ public function index(Request $request)
     date_default_timezone_set('Asia/Jakarta');
     $validatedData['LastModifiedDate'] = now()->format('Y-m-d H:i:s');
 
-    // Update the lab transaction
+    // Update data transaksi lab
     $labTrans->update($validatedData);
 
     // Ambil data pasien jika gcrecord = 0, jika gcrecord = 1 maka kosongkan
@@ -606,42 +618,38 @@ public function index(Request $request)
         $age = (string) ($currentYear - $birthYear);
     }
 
-    // Format the response
-    $formattedData = [
-        'ID' => $labTrans->ID,
-        'LabNumber' => $labTrans->LabNumber,
-        'LabTest' => $labTrans->LabTest,
-        'TransDate' => $labTrans->TransDate,
-        'DoctorReferral' => $labTrans->DoctorReferral,
-        'patient' => $patient ? [
-            'ID'                  => $patient->ID ?? null,
-            'NIK'                 => $patient->NIK ?? null,
-            'PatientID_Provider'  => $patient->PatientID_Provider ?? null,
-            'FullName'            => $patient->FullName ?? null,
-            'Sex'                 => $patient->Sex ?? null,
-            'BirthDate'           => $patient->BirthDate ?? null,
-            'Address'             => $patient->Address ?? null,
-            'Phone'               => $patient->Phone ?? null,
-            // 'LastModifiedBy'      => $patient->LastModifiedBy ?? null,
-        ] : null, // Jika gcrecord = 1, maka patient = null
-        'Age' => $age, // Umur otomatis dihitung jika pasien tersedia
-        'Anamnesa' => $labTrans->Anamnesa,
-        'BB' => $labTrans->BB,
-        'TB' => $labTrans->TB,
-        'LP' => $labTrans->LP,
-        'TD' => $labTrans->TD,
-        'BMI' => $labTrans->BMI,
-        'FinalStatement' => $labTrans->FinalStatement,
-        'FinalResult' => $labTrans->FinalResult,
-        'Status' => $labTrans->Status,
-        'Status' => $labTrans->Status,
-        'LastModifiedDate' => $labTrans->LastModifiedDate,
-        'LastModifiedBy' => $labTrans->LastModifiedBy,
-    ];
-
+    // Format response
     return response()->json([
         'message' => 'Data berhasil diupdate',
-        'data' => $formattedData
+        'data' => [
+            'ID' => $labTrans->ID,
+            'LabNumber' => $labTrans->LabNumber,
+            'LabTest' => $labTrans->LabTest,
+            'TransDate' => $labTrans->TransDate,
+            'DoctorReferral' => $labTrans->DoctorReferral,
+            'patient' => $patient ? [
+                'ID'                  => $patient->ID ?? null,
+                'NIK'                 => $patient->NIK ?? null,
+                'PatientID_Provider'  => $patient->PatientID_Provider ?? null,
+                'FullName'            => $patient->FullName ?? null,
+                'Sex'                 => $patient->Sex ?? null,
+                'BirthDate'           => $patient->BirthDate ?? null,
+                'Address'             => $patient->Address ?? null,
+                'Phone'               => $patient->Phone ?? null,
+            ] : null, // Jika gcrecord = 1, maka patient = null
+            'Age' => $age, // Umur otomatis dihitung jika pasien tersedia
+            'Anamnesa' => $labTrans->Anamnesa,
+            'BB' => $labTrans->BB,
+            'TB' => $labTrans->TB,
+            'LP' => $labTrans->LP,
+            'TD' => $labTrans->TD,
+            'BMI' => $labTrans->BMI,
+            'FinalStatement' => $labTrans->FinalStatement,
+            'FinalResult' => $labTrans->FinalResult,
+            'Status' => $labTrans->Status,
+            'LastModifiedDate' => $labTrans->LastModifiedDate,
+            'LastModifiedBy' => $labTrans->LastModifiedBy,
+        ]
     ], 200);
 }
 }

@@ -215,46 +215,51 @@ public function store(Request $request)
  * )
  */
 
-public function update(Request $request, $id)
-{
-    // Cari item berdasarkan ID
-    $item = ItemTest::find($id);
-
-    if (!$item) {
-        return response()->json(['message' => 'Item not found'], 404);
-    }
-
-    $validated = $request->validate([
-        'ItemTestCode' => 'string|max:10',
-        'ItemTestName' => 'required|string|max:225',
-        'Group' => 'nullable|string|max:30',
-        'SubGroup' => 'nullable|string|max:30',
-        'Descriptions' => 'nullable|string|max:250',
-        'LastModifiedBy' => 'nullable|string|max:250',
-        'gcrecord' => 'nullable|boolean',
-    ]);
-
-    // Set nilai `LastModifiedDate` dan `LastModifiedBy`
-    date_default_timezone_set('Asia/Jakarta');
-
-    // Tambahkan CreateDate dengan format timestamp agar cocok dengan kolom datetime di database
-    $validated['LastModifiedDate'] = now()->format('Y-m-d H:i:s');
-
-    // $validated['LastModifiedBy'] = $request->input('CreateBy', 'admin');
-
-    // Update item
-    $item->update($validated);
-
-    // Sembunyikan field `CreateDate` dalam response
-    return response()->json($item->only([ 
-        'ID',
-        'ItemTestCode',
-        'ItemTestName',
-        'Group',
-        'SubGroup',
-        'Descriptions',
-        'LastModifiedDate',
-        'LastModifiedBy'
-    ]), 200);
-}
+ public function update(Request $request)
+ {
+     // Ambil ID dari query parameter (?id=12)
+     $id = $request->query('id');
+ 
+     // Jika ID tidak diberikan, kembalikan error
+     if (!$id) {
+         return response()->json(['message' => 'ID is required'], 400);
+     }
+ 
+     // Cari item berdasarkan ID
+     $item = ItemTest::find($id);
+ 
+     if (!$item) {
+         return response()->json(['message' => 'Item not found'], 404);
+     }
+ 
+     $validated = $request->validate([
+         'ItemTestCode' => 'string|max:10',
+         'ItemTestName' => 'required|string|max:225',
+         'Group' => 'nullable|string|max:30',
+         'SubGroup' => 'nullable|string|max:30',
+         'Descriptions' => 'nullable|string|max:250',
+         'LastModifiedBy' => 'nullable|string|max:250',
+         'gcrecord' => 'nullable|boolean',
+     ]);
+ 
+     // Set nilai `LastModifiedDate`
+     date_default_timezone_set('Asia/Jakarta');
+     $validated['LastModifiedDate'] = now()->format('Y-m-d H:i:s');
+ 
+     // Update item
+     $item->update($validated);
+ 
+     // Sembunyikan field `CreateDate` dalam response
+     return response()->json($item->only([
+         'ID',
+         'ItemTestCode',
+         'ItemTestName',
+         'Group',
+         'SubGroup',
+         'Descriptions',
+         'LastModifiedDate',
+         'LastModifiedBy'
+     ]), 200);
+ }
+ 
 }

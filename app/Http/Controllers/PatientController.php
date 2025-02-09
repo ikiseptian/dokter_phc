@@ -286,8 +286,17 @@ public function store(Request $request)
  *     )
  * )
  */
-public function update(Request $request, $id)
+public function update(Request $request)
 {
+    // Ambil ID dari query parameter (?id=12)
+    $id = $request->query('id');
+
+    // Jika ID tidak diberikan, kembalikan error
+    if (!$id) {
+        return response()->json(['message' => 'ID is required'], 400);
+    }
+
+    // Cari pasien berdasarkan ID dan pastikan `gcrecord = 0`
     $patient = Patient::where('ID', $id)->where('gcrecord', 0)->first();
 
     if (!$patient) {
@@ -309,6 +318,7 @@ public function update(Request $request, $id)
     // Pastikan LastModifiedDate selalu diisi dengan waktu sekarang
     $validatedData['LastModifiedDate'] = now()->format('Y-m-d H:i:s');
 
+    // Update data pasien
     $patient->update($validatedData);
 
     return response()->json([

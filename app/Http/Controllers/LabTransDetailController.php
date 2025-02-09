@@ -323,8 +323,17 @@ public function store(Request $request)
      *     )
      * )
      */
-    public function update(Request $request, $ID)
+    public function update(Request $request)
 {
+    // Ambil ID dari query parameter (?id=12)
+    $ID = $request->query('id');
+
+    // Jika ID tidak diberikan, kembalikan error
+    if (!$ID) {
+        return response()->json(['message' => 'ID is required'], 400);
+    }
+
+    // Cari data berdasarkan ID dan pastikan gcrecord = 0
     $labTransDetail = LabTransDetail::where('ID', $ID)->where('gcrecord', 0)->first();
 
     if (!$labTransDetail) {
@@ -337,39 +346,41 @@ public function store(Request $request)
         'Unit' => 'nullable|string',
         'ReferenceValue' => 'nullable|string',
         'ResultNotes' => 'nullable|string',
-        'LastModifiedDate' => 'nullable|date',
         'LastModifiedBy' => 'nullable|string',
         'ItemTestID' => 'nullable|integer|exists:Item_Test,ID',
         'LabTransID' => 'nullable|integer|exists:Lab_Trans,ID'
     ]);
 
-    // Update LastModifiedDate otomatis ke waktu sekarang
+    // Set timezone ke Asia/Jakarta
     date_default_timezone_set('Asia/Jakarta');
+
+    // Update LastModifiedDate otomatis ke waktu sekarang
     $validatedData['LastModifiedDate'] = now()->format('Y-m-d H:i:s');
 
     // Update data
     $labTransDetail->update($validatedData);
 
-    // Return response yang sesuai dengan format GET
+    // Return response dengan format yang sesuai dengan GET
     return response()->json([
-        'ID' => $labTransDetail->ID,
-        'LabTransID' => $labTransDetail->LabTransID,
-        'ItemTestID' => $labTransDetail->ItemTestID,
-        'itemTest' => $labTransDetail->itemTest ? [
-            'ItemTestCode'      => $labTransDetail->itemTest->ItemTestCode,
-            'ItemTestName'      => $labTransDetail->itemTest->ItemTestName,
-            'Group'             => $labTransDetail->itemTest->Group,
-            'SubGroup'          => $labTransDetail->itemTest->SubGroup,
-            'Descriptions'      => $labTransDetail->itemTest->Descriptions,
-        ] : null,
-        'ResultValue' => $labTransDetail->ResultValue,
-        'Unit' => $labTransDetail->Unit,
-        'ReferenceValue' => $labTransDetail->ReferenceValue,
-        'ResultNotes' => $labTransDetail->ResultNotes,
-        // 'CreateDate' => $labTransDetail->CreateDate,
-        // 'LastModifiedDate' => $labTransDetail->LastModifiedDate,
-        // 'LastModifiedBy' => $labTransDetail->LastModifiedBy,
+        'message' => 'LabTransDetail updated successfully',
+        'data' => [
+            'ID' => $labTransDetail->ID,
+            'LabTransID' => $labTransDetail->LabTransID,
+            'ItemTestID' => $labTransDetail->ItemTestID,
+            'itemTest' => $labTransDetail->itemTest ? [
+                'ItemTestCode'      => $labTransDetail->itemTest->ItemTestCode,
+                'ItemTestName'      => $labTransDetail->itemTest->ItemTestName,
+                'Group'             => $labTransDetail->itemTest->Group,
+                'SubGroup'          => $labTransDetail->itemTest->SubGroup,
+                'Descriptions'      => $labTransDetail->itemTest->Descriptions,
+            ] : null,
+            'ResultValue' => $labTransDetail->ResultValue,
+            'Unit' => $labTransDetail->Unit,
+            'ReferenceValue' => $labTransDetail->ReferenceValue,
+            'ResultNotes' => $labTransDetail->ResultNotes,
+            'LastModifiedDate' => $labTransDetail->LastModifiedDate,
+            'LastModifiedBy' => $labTransDetail->LastModifiedBy,
+        ]
     ], 200);
 }
-
 }

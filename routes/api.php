@@ -33,28 +33,28 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::get('/pasien', [PatientController::class, 'index']);
 Route::post('/pasien', [PatientController::class, 'store']);
-Route::put('/pasien/{id}', [PatientController::class, 'update']);
+Route::put('/pasien', [PatientController::class, 'update']);
 
 Route::get('/itemtest', [ItemTestController::class, 'index']);
 Route::post('/itemtest', [ItemTestController::class, 'store']);
-Route::put('/itemtest/{id}', [ItemTestController::class, 'update']);
+Route::put('/itemtest', [ItemTestController::class, 'update']);
 
 Route::get('/labtrans', [LabTransController::class, 'index']);
 Route::post('/labtrans', [LabTransController::class, 'store']);
-Route::put('/labtrans/{id}', [LabTransController::class, 'update']);
+Route::put('/labtrans', [LabTransController::class, 'update']);
 
 
 Route::get('/labtransdetail', [LabTransDetailController::class, 'index']);
 Route::post('/labtransdetail', [LabTransDetailController::class, 'store']);
-Route::put('/labtransdetail/{id}', [LabTransDetailController::class, 'update']);
+Route::put('/labtransdetail', [LabTransDetailController::class, 'update']);
 
 Route::get('/labtransother', [LabTransOtherController::class, 'index']);
-Route::put('/labtransother/{id}', [LabTransOtherController::class, 'update']);
 Route::post('/labtransother', [LabTransOtherController::class, 'store']);
+Route::put('/labtransother', [LabTransOtherController::class, 'update']);
 
 Route::get('/supportservice', [SupportServiceController::class, 'index']);
 Route::post('/supportservice', [SupportServiceController::class, 'store']);
-Route::put('/supportservice/{id}', [SupportServiceController::class, 'update']);
+Route::put('/supportservice', [SupportServiceController::class, 'update']);
 
 
 

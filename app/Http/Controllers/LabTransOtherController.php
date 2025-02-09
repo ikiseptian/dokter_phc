@@ -300,44 +300,55 @@ public function store(Request $request)
  */
 
  
- public function update(Request $request, $ID)
- {
-     // Cari data berdasarkan ID dan pastikan gcrecord = 0
-     $labTransOther = LabTransOther::where('ID', $ID)->where('gcrecord', 0)->first();
- 
-     if (!$labTransOther) {
-         return response()->json(['message' => 'Data not found'], 404);
-     }
- 
-     // Validasi semua field yang bisa di-update
-     $validatedData = $request->validate([
-         'SupportServiceNotes' => 'nullable|string',
-         'LastModifiedBy' => 'nullable|string',
-         'LabTransID' => 'nullable|integer|exists:Lab_Trans,ID',
-         'SupportServiceID' => 'nullable|integer|exists:Support_Service,ID',
-     ]);
-     
-     // Set timezone ke Asia/Jakarta
-     date_default_timezone_set('Asia/Jakarta');
- 
-     // Update LastModifiedDate otomatis ke waktu sekarang
-     $validatedData['LastModifiedDate'] = now()->format('Y-m-d H:i:s');
- 
-     // Update data
-     $labTransOther->update($validatedData);
- 
-     // Format response sesuai dengan GET
-     return response()->json([
-         'ID' => $labTransOther->ID,
-         'LabTransID' => $labTransOther->LabTransID,
-         'SupportServiceID' => $labTransOther->SupportServiceID,
-         'SupportService' => $labTransOther->supportService ? [
-             'SupportServiceCode' => $labTransOther->supportService->SupportServiceCode,
-             'SupportServiceName' => $labTransOther->supportService->SupportServiceName,
-         ] : null,
-         'SupportServiceNotes' => $labTransOther->SupportServiceNotes,
-         'LastModifiedDate' => $labTransOther->LastModifiedDate,
-         'LastModifiedBy' => $labTransOther->LastModifiedBy, 
-     ], 200);
- }
-} 
+ public function update(Request $request)
+{
+    // Ambil ID dari query parameter (?id=12)
+    $ID = $request->query('id');
+
+    // Jika ID tidak diberikan, kembalikan error
+    if (!$ID) {
+        return response()->json(['message' => 'ID is required'], 400);
+    }
+
+    // Cari data berdasarkan ID dan pastikan gcrecord = 0
+    $labTransOther = LabTransOther::where('ID', $ID)->where('gcrecord', 0)->first();
+
+    if (!$labTransOther) {
+        return response()->json(['message' => 'Data not found'], 404);
+    }
+
+    // Validasi semua field yang bisa di-update
+    $validatedData = $request->validate([
+        'SupportServiceNotes' => 'nullable|string',
+        'LastModifiedBy' => 'nullable|string',
+        'LabTransID' => 'nullable|integer|exists:Lab_Trans,ID',
+        'SupportServiceID' => 'nullable|integer|exists:Support_Service,ID',
+    ]);
+    
+    // Set timezone ke Asia/Jakarta untuk memastikan waktu update sesuai
+    date_default_timezone_set('Asia/Jakarta');
+
+    // Update LastModifiedDate secara otomatis ke waktu sekarang
+    $validatedData['LastModifiedDate'] = now()->format('Y-m-d H:i:s');
+
+    // Lakukan update data di database
+    $labTransOther->update($validatedData);
+
+    // Format response agar lebih informatif dan konsisten dengan response GET
+    return response()->json([
+        'message' => 'LabTransOther updated successfully',
+        'data' => [
+            'ID' => $labTransOther->ID,
+            'LabTransID' => $labTransOther->LabTransID,
+            'SupportServiceID' => $labTransOther->SupportServiceID,
+            'SupportService' => $labTransOther->supportService ? [
+                'SupportServiceCode' => $labTransOther->supportService->SupportServiceCode,
+                'SupportServiceName' => $labTransOther->supportService->SupportServiceName,
+            ] : null,
+            'SupportServiceNotes' => $labTransOther->SupportServiceNotes,
+            'LastModifiedDate' => $labTransOther->LastModifiedDate,
+            'LastModifiedBy' => $labTransOther->LastModifiedBy,
+        ]
+    ], 200);
+}
+}
